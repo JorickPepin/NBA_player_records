@@ -2,7 +2,6 @@ package recordsnbawiki;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -19,12 +18,12 @@ public class RecordsNBAWiki {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        recuperationContenu(250);
+        recuperationContenu(54148);
     }
 
     /**
      * Méthode permettant de récupérer le code source de la page
-     *
+     * 
      * @param identifiant = l'identifiant du joueur
      */
     private static void recuperationContenu(int identifiant) {
@@ -38,11 +37,21 @@ public class RecordsNBAWiki {
 
             StringBuilder sb = new StringBuilder();
 
+            boolean contenuValide = false;
+            
             while ((line = br.readLine()) != null) {
 
-                sb.append(line);
-                sb.append(System.lineSeparator());
-
+                // on détermine des "balises" pour récupérer que le contenu utile
+                if (line.equals("<h2>NBA Regular Season Career Highs</h2>")) {
+                    contenuValide = true;
+                } else if (line.equals("<p class=\"footnote\">* NBA stats from 1946-1947</p><h2>NBA Career Comparison</h2>")) {
+                    contenuValide = false;
+                }
+                
+                if (contenuValide) {
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
+                }       
             }
 
             System.out.println(sb);
