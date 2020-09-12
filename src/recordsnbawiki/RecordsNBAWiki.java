@@ -40,7 +40,7 @@ public class RecordsNBAWiki {
             URL url = new URL("https://basketball.realgm.com/player/LeBron-James/Bests/" + identifiant);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuilder sb = new StringBuilder(); // SB contenant le contenu
+            StringBuilder contenuBrut = new StringBuilder(); // SB contenant le contenu
 
             // booleen permettant de garder que le contenu désiré
             boolean contenuValide = false;
@@ -64,27 +64,33 @@ public class RecordsNBAWiki {
                 // si le contenu est compris entre les deux balises délimitées,
                 // on l'ajoute au SB
                 if (contenuValide) {
-                    sb.append(ligne);
-                    sb.append(System.lineSeparator());
+                    contenuBrut.append(ligne);
+                    contenuBrut.append(System.lineSeparator());
                 }     
             }
             
-            // récupération du contenu du SB (le code HTML utile) pour le transtyper en String
-            String html = sb.toString();
-            
+            // récupération du contenu du SB (le code HTML utile) en String pour le traiter avec jsoup
+            String html = contenuBrut.toString();       
             Document document = Jsoup.parse(html);
                         
-            // récupération du nombre d'éléments <td> (ceux qui nous intéressent)
+            // récupération du nombre d'éléments <td> présents
             int size = document.select("td").size();
-                    
+                           
+            StringBuilder contenuTraite = new StringBuilder(); // SB contenant le contenu sans balise HTML (uniquement le texte)
+            
             int i = 0;
             while (i < size) {
                 // récupération des éléments <td>
                 Element link = document.select("td").get(i);
-                String texteAEcrire = link.text() + "\n";
-                ecritureDansFichier(texteAEcrire, recuperationNomJoueur(titre));
+              
+                // ajout de l'élément <td> sans balise au SB
+                contenuTraite.append(link.text()).append("\n");
+
                 i++;
             }
+            
+            // une fois notre contenu récupéré, on l'inscrit dans le fichier au nom du joueur
+            ecritureDansFichier(contenuTraite.toString(), recuperationNomJoueur(titre));
             
         } catch (MalformedURLException e) {
             System.err.println("Erreur : " + e);
@@ -96,6 +102,7 @@ public class RecordsNBAWiki {
     /**
      * Méthode permettant d'écrire le contenu dans un fichier .txt
      * @param contenu
+     * @param nom = le nom du joueur
      */
     private static void ecritureDansFichier(String contenu, String nom) {
 
@@ -104,7 +111,7 @@ public class RecordsNBAWiki {
         // on crée ou écrit dans le fichier correspondant au nom du joueur
         Path fichier = Paths.get("fichiers/" + nom + ".txt");
       
-        try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(fichier, CREATE, APPEND))) {
+        try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(fichier, CREATE))) {
             out.write(data, 0, data.length);
         } catch (IOException e) {
             System.err.println("Erreur : " + e);
