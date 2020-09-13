@@ -1,17 +1,15 @@
 package recordsnbawiki;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import static java.nio.file.StandardOpenOption.CREATE;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,33 +29,41 @@ public class RecordsNBAWiki {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        obtenirFichierTexte(24323, 3078284);
+        obtenirFichierTexte(54148, 3945274);
     }
 
     /**
      * Méthode permettant d'obtenir le fichier texte contenant les records 
      * mis en forme dans le dossier "fichiers" à partir de l'identifiant REALGM du joueur
      * 
-     * @param identifiant = l'identifiant RealGM du joueur
+     * @param identifiantRealGM = l'identifiant RealGM du joueur
+     * @param identifiantESPN = l'identifiant ESPN du joueur
      */
     private static void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) {
         
-        // récupération du contenu brut du code source
-        String contenu = recuperationContenuRealGM(identifiantRealGM); 
+        // récupération du contenu brut du code source de RealGM
+        String contenuRecords = recuperationContenuRealGM(identifiantRealGM); 
         
         // récupération du titre de la page
         String titre = recuperationTitre(identifiantRealGM);
 
         // traitement du contenu pour obtenir la liste des records
-        ArrayList<Record> listeRecords = traitementContenu(contenu);
+        ArrayList<Record> listeRecords = traitementContenu(contenuRecords);
         
-        // ajout des informations des records à notre template
-        contenu = preparationContenuFinal(listeRecords);
+        // ajout des informations des records au template
+        contenuRecords = preparationContenuRecords(listeRecords);
+        
+        // récupération du contenu du code source d'ESPN
+        String[] valeursDD2_TD3 = recuperationContenuESPN(identifiantESPN);
+        
+        // ajout des informations des double-doubles et triple-doubles au template
+        String contenuDD2_TD3 = preparationContenuDD2_TD3(valeursDD2_TD3);
+        
+        // le contenu final correspond au contenu sur les DD2 et TD3 ajouté à celui sur les records
+        String contenuFinal = contenuRecords + contenuDD2_TD3;
         
         // écriture du contenu final dans le fichier au nom du joueur
-        ecritureDansFichier(contenu, recuperationNomJoueur(titre));
-
-        recuperationContenuESPN(identifiantESPN);
+        ecritureDansFichier(contenuFinal, recuperationNomJoueur(titre));    
     }
 
     /**
@@ -258,9 +264,9 @@ public class RecordsNBAWiki {
         byte data[] = contenu.getBytes();
 
         // on crée ou écrit dans le fichier correspondant au nom du joueur
-        Path fichier = Paths.get("fichiers/" + nom + ".txt");
-
-        try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(fichier, CREATE))) {
+        String file = "fichiers/" + nom + ".txt";
+        
+        try (OutputStream out = new FileOutputStream(file)) {
             out.write(data, 0, data.length);
         } catch (IOException e) {
             System.err.println("Erreur : " + e);
@@ -288,7 +294,7 @@ public class RecordsNBAWiki {
      * @param listeRecords
      * @return le contenu final
      */
-    private static String preparationContenuFinal(ArrayList<Record> listeRecords) {
+    private static String preparationContenuRecords(ArrayList<Record> listeRecords) {
             
         String contenuTemplate = "";
         String contenuFinal = "";
@@ -454,7 +460,7 @@ public class RecordsNBAWiki {
      * @param listeRecords
      * @param index
      * @param adversaire
-     * @return 
+     * @return (@) [[nom_adversaire]] ou (@) [[Hornets de Charlotte (NBA)|Hornets de Charlotte]]
      */
     private static String creerAdversaireAvecLienInterne(ArrayList<Record> listeRecords, String index, String adversaire) {
 
@@ -482,7 +488,7 @@ public class RecordsNBAWiki {
      * 
      * @param identifiant l'identifiant ESPN du joueur
      */
-    private static void recuperationContenuESPN(int identifiant) {
+    private static String[] recuperationContenuESPN(int identifiant) {
 
         String DD2_SR = "0";
         String TD3_SR = "0";
@@ -493,7 +499,7 @@ public class RecordsNBAWiki {
             
             // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
             DD2_SR = document.select("span.fw-bold").get(36).text();
-            // le nombre de triple en saison régulière correspond au 37e élément <span class="fw-bold">
+            // le nombre de triple-double en saison régulière correspond au 37e élément <span class="fw-bold">
             TD3_SR = document.select("span.fw-bold").get(37).text();
             
         } catch (IOException e) {
@@ -513,19 +519,61 @@ public class RecordsNBAWiki {
             // si cette classe n'existe pas, les données sont accessibles
             if (document.select(".NoDataAvailable__Msg__Content").isEmpty()) {
                 
-                // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
+                // le nombre de double-double en playoffs correspond au 36e élément <span class="fw-bold">
                 DD2_PL = document.select("span.fw-bold").get(36).text();
-                // le nombre de triple en saison régulière correspond au 37e élément <span class="fw-bold">
+                // le nombre de triple-double en playoffs correspond au 37e élément <span class="fw-bold">
                 TD3_PL = document.select("span.fw-bold").get(37).text();
             }
             
         } catch (IOException e) {
             System.err.println("Erreur : " + e);
         }
+              
+        return new String[]{DD2_SR, TD3_SR, DD2_PL, TD3_PL};
+    }
+    
+    /**
+     * Mise en forme des valeurs récupérer sur ESPN
+     * 
+     * @param valeurs
+     * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
+     */
+    private static String preparationContenuDD2_TD3(String[] valeurs) {
         
-        System.out.println(DD2_SR);
-        System.out.println(TD3_SR);
-        System.out.println(DD2_PL);
-        System.out.println(TD3_PL);
+        int nbDD2_SR = Integer.valueOf(valeurs[0]);
+        int nbTD3_SR = Integer.valueOf(valeurs[1]);
+        
+        int nbDD2_PL = Integer.valueOf(valeurs[2]);
+        int nbTD3_PL = Integer.valueOf(valeurs[3]);
+        
+        int nbTotalDD2 = nbDD2_SR + nbDD2_PL;
+        int nbTotalTD3 = nbTD3_SR + nbTD3_PL;
+        
+        String ligne_DD2 = "* [[Double-double]] : " + nbTotalDD2;
+        String ligne_TD3 = "* [[Triple-double]] : " + nbTotalTD3;
+        
+        if (nbDD2_PL > 0) { // s'il y a des DD2 en playoffs
+            ligne_DD2 += " (dont " + nbDD2_PL + " en playoffs)";
+        }
+        
+        if (nbTD3_PL > 0) { // s'il y a des TD3 en playoffs
+            ligne_TD3 += " (dont " + nbTD3_PL + " en playoffs)";
+        }
+        
+        return "|}\n" + ligne_DD2 + "\n" + ligne_TD3 + recuperationDateDuJour();
+    }
+    
+    /**
+     * Méthode retournant la date du jour au bon format
+     * 
+     * @return la date du jour
+     */
+    private static String recuperationDateDuJour() {
+        
+        Date date = new Date();
+        
+        SimpleDateFormat formatter = new SimpleDateFormat("d MMMM yyyy");
+        
+        return "\n''Dernière mise à jour le : {{date-|" + formatter.format(date) + "}}''";
     }
 }
