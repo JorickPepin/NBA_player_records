@@ -2,6 +2,7 @@ package recordsnbawiki;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -15,6 +16,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Scanner;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -29,21 +31,31 @@ public class RecordsNBAWiki {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        obtenirFichierTexte(24275);
+        obtenirFichierTexte(32975);
     }
 
+    /**
+     * Méthode permettant d'obtenir le fichier texte contenant les records 
+     * mis en forme dans le dossier "fichiers" à partir de l'identifiant REALGM du joueur
+     * 
+     * @param identifiant = l'identifiant REALGM du joueur
+     */
     private static void obtenirFichierTexte(int identifiant) {
-        String contenu = recuperationContenu(identifiant);
+        
+        // récupération du contenu brut du code source
+        String contenu = recuperationContenu(identifiant); 
+        
+        // récupération du titre de la page
         String titre = recuperationTitre(identifiant);
 
+        // traitement du contenu pour obtenir la liste des records
         ArrayList<Record> listeRecords = traitementContenu(contenu);
-
-        for (int i = 0; i < listeRecords.size(); ++i) {
-            System.out.println(i + " : " + listeRecords.get(i).toString());
-        }
-
-        // une fois notre contenu récupéré, on l'inscrit dans le fichier au nom du joueur
-        // ecritureDansFichier(contenu, recuperationNomJoueur(titre));
+        
+        // ajout des informations des records à notre template
+        contenu = preparationContenuFinal(listeRecords);
+        
+        // écriture du contenu final dans le fichier au nom du joueur
+        ecritureDansFichier(contenu, recuperationNomJoueur(titre));
     }
 
     /**
@@ -58,6 +70,7 @@ public class RecordsNBAWiki {
 
         try {
             // url de la page du joueur
+            // obligé de mettre un nom de base (ici LJ) mais pas d'impact sur les infos récupérées
             URL url = new URL("https://basketball.realgm.com/player/LeBron-James/Bests/" + identifiant + "/NBA");
 
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -77,11 +90,15 @@ public class RecordsNBAWiki {
             System.err.println("Erreur : " + e);
         }
 
-        return titre;
+        // récupération du titre sans la balise <title>
+        Document docTitre = Jsoup.parse(titre);
+        Element linkTitre = docTitre.select("title").first();
+     
+        return linkTitre.text();
     }
 
     /**
-     * Méthode permettant de récupérer le contenu qui nous intéresse (les infos
+     * Méthode permettant de récupérer le contenu utile (les infos
      * sur les records) via le code source de la page
      *
      * @param identifiant = l'identifiant REALGM du joueur
@@ -93,10 +110,11 @@ public class RecordsNBAWiki {
 
         try {
             // url de la page du joueur
+            // obligé de mettre un nom de base (ici LJ) mais pas d'impact sur les infos récupérées
             URL url = new URL("https://basketball.realgm.com/player/LeBron-James/Bests/" + identifiant + "/NBA");
 
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuilder contenuBrut = new StringBuilder(); // SB contenant le contenu
+            StringBuilder contenuBrut = new StringBuilder();
 
             // booleen permettant de garder que le contenu désiré
             boolean contenuValide = false;
@@ -104,7 +122,7 @@ public class RecordsNBAWiki {
             String ligne;
             while ((ligne = br.readLine()) != null) {
 
-                // on détermine des "balises" pour récupérer que le contenu utile
+                // on détermine des "balises" pour ne récupérer que le contenu utile
                 if (ligne.equals("<h2>NBA Regular Season Career Highs</h2>")) {
                     contenuValide = true;
                 } else if (ligne.startsWith("<p class=\"footnote\">")) {
@@ -151,8 +169,8 @@ public class RecordsNBAWiki {
     }
 
     /**
-     * Méthode permettant de traiter les infos sur les records pour obtenir
-     * chaque information séparement (valeur du record, adversaire, date)
+     * Méthode permettant de traiter le contenu pour obtenir chaque information 
+     * sur le record séparément (valeur, adversaire, date)
      * 
      * @param contenu
      * @return une liste contenant tous les records
@@ -189,10 +207,14 @@ public class RecordsNBAWiki {
                 // On se contente donc de dire qu'il a été fait plusieurs fois
                 
                 if (!ligne.contains("times")) {
-                    
                     // s'il n'y a pas "times", l'adversaire correspond au 3e mot
-                    adversaire = ligneSeparee[2];
-
+                    // s'il y a un '@', on le rajoute devant l'adversaire (match à l'extérieur)
+                    if (ligne.contains("@")) {
+                        adversaire = "@ " + transformerAdversaire(ligneSeparee[2]);
+                    } else {
+                       adversaire = transformerAdversaire(ligneSeparee[2]); 
+                    }
+                    
                     listeRecords.add(new Record(valeur, adversaire, dateEnFrancais));
                 } else {
                     
@@ -203,6 +225,8 @@ public class RecordsNBAWiki {
 
                     listeRecords.add(new Record(valeur, adversaire, ""));
                 }
+            } else {
+                listeRecords.add(new Record("-", "-", "-"));
             }
         }
 
@@ -210,7 +234,8 @@ public class RecordsNBAWiki {
     }
 
     /**
-     * Méthode permettant d'écrire le contenu dans un fichier .txt
+     * Méthode permettant d'écrire le contenu dans un fichier .txt 
+     * au nom du joueur
      *
      * @param contenu
      * @param nom = le nom du joueur
@@ -230,28 +255,77 @@ public class RecordsNBAWiki {
     }
 
     /**
-     * Méthode permettant de récupérer le nom et le prénom du joueur à partir de
-     * la ligne <title> du code source
+     * Méthode permettant de récupérer le nom et le prénom du joueur 
+     * à partir du titre de la page
      *
-     * @param titre = la ligne <title> du code source
+     * @param titre = titre de la page
      * @return prénom_nom du joueur
      */
     private static String recuperationNomJoueur(String titre) {
-
-        // récupération du titre sans la balise <title>
-        Document docTitre = Jsoup.parse(titre);
-        Element linkTitre = docTitre.select("title").first();
-
-        String texte = linkTitre.text();
-
-        String prenom = texte.split(" ")[0];
-        String nom = texte.split(" ")[1];
+        
+        String prenom = titre.split(" ")[0];
+        String nom = titre.split(" ")[1];
 
         return prenom + "_" + nom;
     }
-
+ 
     /**
-     * Méthode permettant de transformer une date avec le format "03/01/19" en
+     * Méthode permettant d'inscrire les records dans le template
+     * 
+     * @param listeRecords
+     * @return le contenu final
+     */
+    private static String preparationContenuFinal(ArrayList<Record> listeRecords) {
+            
+        String contenuTemplate = "";
+        String contenuFinal = "";
+        
+        // récupération du contenu du template
+        try {
+            File fichier = new File("fichiers/template.txt");
+
+            Scanner sc = new Scanner(fichier);
+            StringBuilder sb = new StringBuilder();
+            
+            while (sc.hasNextLine()) {
+                sb.append(sc.nextLine());
+                sb.append(System.lineSeparator());
+            }
+            
+            contenuTemplate = sb.toString();
+            
+        } catch (IOException e) {
+            System.err.println("Erreur : " + e);
+        }
+        
+        // séparation du texte pour le traiter ligne par ligne
+        String[] lignes = contenuTemplate.split("\n");
+        
+        // pour chaque ligne du texte
+        for (int i = 0; i < lignes.length; ++i) {
+            String ligne = lignes[i];
+               
+            if (!ligne.startsWith("|-")) {
+                // séparation de la ligne mot par mot
+                String[] ligneSeparee = ligne.split(" ");
+                
+                // le record souhaité (représenté par un nombre) correspond au dernier mot de la ligne
+                String index = ligneSeparee[ligneSeparee.length - 1];
+
+                // on remplace ce nombre par le record
+                String nouvelleLigne = ligne.replace(index, listeRecords.get(Integer.parseInt(index.trim())).toString());
+                
+                lignes[i] = nouvelleLigne;
+            }
+            
+            contenuFinal += lignes[i] + "\n";
+        }
+     
+        return contenuFinal;
+    }
+        
+    /**
+     * Méthode permettant de transformer une date au format "03/01/19" en
      * "1 mars 2019"
      *
      * @param dateBrute = la date au format "MM/dd/yy"
@@ -275,5 +349,40 @@ public class RecordsNBAWiki {
         }
 
         return dateEnFrancais;
+    }
+    
+    /**
+     * Méthode permettant de récupérer le nom de l'adversaire dans sa version
+     * longue en français
+     * (Amélioration possible avec HashMap)
+     * 
+     * @param adversaire
+     * @return le nom de l'adversaire en français
+     */
+    private static String transformerAdversaire(String adversaire) {
+        
+        String[] nomsCourts = new String[]{"Nuggets", "Timberwolves", "Thunder",
+            "Trail Blazers", "Jazz", "Warriors", "Clippers", "Lakers", "Suns",
+            "Kings", "Mavericks", "Rockets", "Grizzlies", "Pelicans", "Spurs",
+            "Celtics", "Nets", "Knicks", "Sixers", "Raptors", "Bulls", "Cavaliers",
+            "Pistons", "Pacers", "Bucks", "Hawks", "Hornets", "Heat", "Magic", "Wizards"};
+        
+        String[] nomsLongs = new String[]{"Nuggets de Denver", "Timberwolves du Minnesota",
+            "Thunder d'Oklahoma City", "Trail Blazers de Portland", "Jazz de l'Utah",
+            "Warriors de Golden State", "Clippers de Los Angeles", "Lakers de Los Angeles",
+            "Suns de Phoenix", "Kings de Sacramento", "Mavericks de Dallas", "Rockets de Houston",
+            "Grizzlies de Memphis", "Pelicans de La Nouvelle-Orléans", "Spurs de San Antonio",
+            "Celtics de Boston", "Nets de Brooklyn", "Knicks de New York", "76ers de Philadelphie",
+            "Raptors de Toronto", "Bulls de Chicago", "Cavaliers de Cleveland", "Pistons de Détroit",
+            "Pacers de l'Indiana", "Bucks de Milwaukee", "Hawks d'Atlanta", "Hornets de Charlotte",
+            "Heat de Miami", "Magic d'Orlando", "Wizards de Washington"};
+        
+        for (int i = 0; i < nomsCourts.length ; ++i) {
+            if (adversaire.equals(nomsCourts[i])) {
+                adversaire = nomsLongs[i];
+            }
+        }
+
+        return adversaire;
     }
 }

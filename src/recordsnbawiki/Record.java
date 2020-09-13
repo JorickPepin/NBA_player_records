@@ -18,20 +18,11 @@ public class Record {
         this.date = date;
     }
 
-    public String getValeur() {
-        return valeur;
-    }
-
-    public String getAdversaire() {
-        return adversaire;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
     @Override
-    public String toString() {
-        return valeur + " contre " + adversaire + " le " + date;
+    public String toString() {      
+        if (("").equals(date))
+            return valeur + " || colspan=\"2\"| " + adversaire;
+        else
+            return valeur + " || " + adversaire + " || " + date;
     }  
 }

@@ -1,0 +1,44 @@
+| Points || 1
+| 17
+|-
+| Paniers marqués || 8
+| 24
+|-
+| Paniers tentés || 9
+| 25
+|-
+| Paniers à 3 points réussis || 10
+| 26
+|-
+| Paniers à 3 points tentés || 11
+| 27
+|-
+| Lancers francs réussis || 12
+| 28
+|-
+| Lancers francs tentés || 13
+| 29
+|-
+| Rebonds offensifs || 6
+| 22
+|-
+| Rebonds défensifs || 7
+| 23
+|-
+| Rebonds totaux || 2
+| 18
+|-
+| Passes décisives || 3
+| 19
+|-
+| Interceptions || 4
+| 20
+|-
+| Contres || 5
+| 21
+|-
+| Balles perdues || 14
+| 30
+|-
+| Minutes jouées || 0
+| 16
