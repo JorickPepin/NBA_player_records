@@ -31,22 +31,22 @@ public class RecordsNBAWiki {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        obtenirFichierTexte(24323);
+        obtenirFichierTexte(24323, 3078284);
     }
 
     /**
      * Méthode permettant d'obtenir le fichier texte contenant les records 
      * mis en forme dans le dossier "fichiers" à partir de l'identifiant REALGM du joueur
      * 
-     * @param identifiant = l'identifiant REALGM du joueur
+     * @param identifiant = l'identifiant RealGM du joueur
      */
-    private static void obtenirFichierTexte(int identifiant) {
+    private static void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) {
         
         // récupération du contenu brut du code source
-        String contenu = recuperationContenu(identifiant); 
+        String contenu = recuperationContenuRealGM(identifiantRealGM); 
         
         // récupération du titre de la page
-        String titre = recuperationTitre(identifiant);
+        String titre = recuperationTitre(identifiantRealGM);
 
         // traitement du contenu pour obtenir la liste des records
         ArrayList<Record> listeRecords = traitementContenu(contenu);
@@ -56,6 +56,8 @@ public class RecordsNBAWiki {
         
         // écriture du contenu final dans le fichier au nom du joueur
         ecritureDansFichier(contenu, recuperationNomJoueur(titre));
+
+        recuperationContenuESPN(identifiantESPN);
     }
 
     /**
@@ -104,7 +106,7 @@ public class RecordsNBAWiki {
      * @param identifiant = l'identifiant REALGM du joueur
      * @return le texte présent dans les balises <td> 
      */
-    private static String recuperationContenu(int identifiant) {
+    private static String recuperationContenuRealGM(int identifiant) {
 
         String contenu = "";
 
@@ -472,5 +474,58 @@ public class RecordsNBAWiki {
                 return "[[" + listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase() + "]]";
             }
         }
+    }
+
+    /**
+     * Récupération du nombre de double-double et triple-double en saison
+     * régulière et en playoffs sur espn.com
+     * 
+     * @param identifiant l'identifiant ESPN du joueur
+     */
+    private static void recuperationContenuESPN(int identifiant) {
+
+        String DD2_SR = "0";
+        String TD3_SR = "0";
+        
+        // récupération du nombre de double-double et triple-double en saison régulière
+        try {
+            Document document = Jsoup.connect("https://www.espn.com/nba/player/stats/_/id/" + identifiant).get();
+            
+            // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
+            DD2_SR = document.select("span.fw-bold").get(36).text();
+            // le nombre de triple en saison régulière correspond au 37e élément <span class="fw-bold">
+            TD3_SR = document.select("span.fw-bold").get(37).text();
+            
+        } catch (IOException e) {
+            System.err.println("Erreur : " + e);
+        }
+
+        String DD2_PL = "0";
+        String TD3_PL = "0";
+        
+        // récupération du nombre de double-double et triple-double en playoffs
+        try {
+            Document document = Jsoup.connect("https://www.espn.com/nba/player/stats/_/id/" + identifiant + "/type/nba/seasontype/3").get();
+            
+            // si le joueur n'a jamais disputé les playoffs, la page contient
+            // un message "No available information." accessible depuis la classe
+            // ".NoDataAvailable__Msg__Content"
+            // si cette classe n'existe pas, les données sont accessibles
+            if (document.select(".NoDataAvailable__Msg__Content").isEmpty()) {
+                
+                // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
+                DD2_PL = document.select("span.fw-bold").get(36).text();
+                // le nombre de triple en saison régulière correspond au 37e élément <span class="fw-bold">
+                TD3_PL = document.select("span.fw-bold").get(37).text();
+            }
+            
+        } catch (IOException e) {
+            System.err.println("Erreur : " + e);
+        }
+        
+        System.out.println(DD2_SR);
+        System.out.println(TD3_SR);
+        System.out.println(DD2_PL);
+        System.out.println(TD3_PL);
     }
 }
