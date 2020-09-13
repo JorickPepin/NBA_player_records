@@ -31,7 +31,7 @@ public class RecordsNBAWiki {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        obtenirFichierTexte(32975);
+        obtenirFichierTexte(24323);
     }
 
     /**
@@ -134,7 +134,7 @@ public class RecordsNBAWiki {
                 if (contenuValide) {
                     contenuBrut.append(ligne);
                     contenuBrut.append(System.lineSeparator());
-                }
+                }                            
             }
 
             // récupération du contenu du SB (le code HTML utile) pour le traiter avec jsoup
@@ -209,12 +209,23 @@ public class RecordsNBAWiki {
                 if (!ligne.contains("times")) {
                     // s'il n'y a pas "times", l'adversaire correspond au 3e mot
                     // s'il y a un '@', on le rajoute devant l'adversaire (match à l'extérieur)
-                    if (ligne.contains("@")) {
-                        adversaire = "@ " + transformerAdversaire(ligneSeparee[2]);
-                    } else {
-                       adversaire = transformerAdversaire(ligneSeparee[2]); 
+                  
+                    // si le 4e mot n'est pas "on", cela signifie que l'équipe est composée de 2 mots (Trail Blazers)
+                    if (!"on".equals(ligneSeparee[3])) {
+                        if (ligne.contains("@")) {
+                            adversaire = "@ " + transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                        } else {
+                            adversaire = transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                        }
+
+                    } else { // sinon le nom est juste composé du 3e mot (Mavericks, Clippers, ...)
+                        if (ligne.contains("@")) {
+                            adversaire = "@ " + transformerAdversaire(ligneSeparee[2]);
+                        } else {
+                            adversaire = transformerAdversaire(ligneSeparee[2]);
+                        }
                     }
-                    
+
                     listeRecords.add(new Record(valeur, adversaire, dateEnFrancais));
                 } else {
                     
@@ -301,6 +312,9 @@ public class RecordsNBAWiki {
         // séparation du texte pour le traiter ligne par ligne
         String[] lignes = contenuTemplate.split("\n");
         
+        ArrayList<String> elementsPresentsSR = new ArrayList<>(); // saison régulière
+        ArrayList<String> elementsPresentsPL = new ArrayList<>(); // playoffs
+        
         // pour chaque ligne du texte
         for (int i = 0; i < lignes.length; ++i) {
             String ligne = lignes[i];
@@ -309,12 +323,56 @@ public class RecordsNBAWiki {
                 // séparation de la ligne mot par mot
                 String[] ligneSeparee = ligne.split(" ");
                 
-                // le record souhaité (représenté par un nombre) correspond au dernier mot de la ligne
+                // le record attendu à cette ligne est représenté par un nombre
+                // et correspond au dernier mot de la ligne
                 String index = ligneSeparee[ligneSeparee.length - 1];
 
-                // on remplace ce nombre par le record
-                String nouvelleLigne = ligne.replace(index, listeRecords.get(Integer.parseInt(index.trim())).toString());
+                // on récupère l'adversaire et la date pour tester s'ils sont déjà présents dans le tableau
+                String adversaire = listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase();
+                String date = listeRecords.get(Integer.parseInt(index.trim())).getDate();
                 
+                if (!adversaire.contains("fois") && !adversaire.startsWith("-")) {
+
+                    if (Integer.parseInt(index.trim()) < 16) { // < 16 : records en saison régulière
+                        
+                        if (!elementsPresentsSR.contains(adversaire)) { // si c'est la première fois que cet adversaire apparait
+                            elementsPresentsSR.add(adversaire); // ajout de l'adveraire aux éléments déjà présents
+
+                            // on transforme l'écriture de l'adversaire pour qu'il apparaisse avec un lien interne [[nom_adversaire]]
+                            listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));                            
+                        }
+                        
+                        if (!elementsPresentsSR.contains(date)) { // si c'est la première fois que cette date apparait
+                            elementsPresentsSR.add(date); // ajout de la date aux éléments déjà présents
+
+                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
+                            
+                        } else { // date déjà présente
+                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
+                        }
+                        
+                    } else { // >= 16 : records en playoffs
+                        
+                        if (!elementsPresentsPL.contains(adversaire)) {
+                            elementsPresentsPL.add(adversaire);
+
+                            listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));
+                        }
+                        
+                        if (!elementsPresentsPL.contains(date)) {
+                            elementsPresentsPL.add(date);
+
+                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
+                            
+                        } else {
+                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
+                        }
+                    }                    
+                }
+               
+                // on remplace l'index du record par celui-ci
+                String nouvelleLigne = ligne.replace(index, listeRecords.get(Integer.parseInt(index.trim())).toString());    
+                      
                 lignes[i] = nouvelleLigne;
             }
             
@@ -384,5 +442,35 @@ public class RecordsNBAWiki {
         }
 
         return adversaire;
+    }
+
+    /**
+     * Méthode permettant de transformer l'écriture d'un adversaire en brut 
+     * en écriture avec un lien interne 
+     * Cas général : (@) [[nom_adversaire]]
+     * 
+     * @param listeRecords
+     * @param index
+     * @param adversaire
+     * @return 
+     */
+    private static String creerAdversaireAvecLienInterne(ArrayList<Record> listeRecords, String index, String adversaire) {
+
+        if (listeRecords.get(Integer.parseInt(index.trim())).getAdversaire().contains("@")) { // si c'est à l'extérieur, on met l'@
+
+            if (adversaire.equals("Hornets de Charlotte")) { // cas particulier
+                return "@ [[Hornets de Charlotte (NBA)|Hornets de Charlotte]]";
+            } else {
+                return "@ [[" + listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase() + "]]";
+            }
+
+        } else {
+
+            if (adversaire.equals("Hornets de Charlotte")) { // cas particulier
+                return "[[Hornets de Charlotte (NBA)|Hornets de Charlotte]]";
+            } else {
+                return "[[" + listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase() + "]]";
+            }
+        }
     }
 }

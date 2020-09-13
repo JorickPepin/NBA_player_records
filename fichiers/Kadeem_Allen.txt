@@ -1,13 +1,13 @@
-| Points || 25 || @ Cavaliers de Cleveland || 11 février 2019
+| Points || 25 || @ [[Cavaliers de Cleveland]] || {{date|11 février 2019|en basket-ball}}
 | - || - || -
 |-
-| Paniers marqués || 10 || @ Cavaliers de Cleveland || 11 février 2019
+| Paniers marqués || 10 || @ Cavaliers de Cleveland || {{date-|11 février 2019}}
 | - || - || -
 |-
-| Paniers tentés || 16 || @ Cavaliers de Cleveland || 11 février 2019
+| Paniers tentés || 16 || @ Cavaliers de Cleveland || {{date-|11 février 2019}}
 | - || - || -
 |-
-| Paniers à 3 points réussis || 3 || @ Bucks de Milwaukee || 2 décembre 2019
+| Paniers à 3 points réussis || 3 || @ [[Bucks de Milwaukee]] || {{date|2 décembre 2019|en basket-ball}}
 | - || - || -
 |-
 | Paniers à 3 points tentés || 4 || colspan="2"| 2 fois
@@ -16,19 +16,19 @@
 | Lancers francs réussis || 5 || colspan="2"| 2 fois
 | - || - || -
 |-
-| Lancers francs tentés || 8 || Pistons de Détroit || 10 avril 2019
+| Lancers francs tentés || 8 || [[Pistons de Détroit]] || {{date|10 avril 2019|en basket-ball}}
 | - || - || -
 |-
 | Rebonds offensifs || 2 || colspan="2"| 2 fois
 | - || - || -
 |-
-| Rebonds défensifs || 5 || Pistons de Détroit || 10 avril 2019
+| Rebonds défensifs || 5 || Pistons de Détroit || {{date-|10 avril 2019}}
 | - || - || -
 |-
 | Rebonds totaux || 5 || colspan="2"| 2 fois
 | - || - || -
 |-
-| Passes décisives || 9 || @ Hawks d'Atlanta || 14 février 2019
+| Passes décisives || 9 || @ [[Hawks d'Atlanta]] || {{date|14 février 2019|en basket-ball}}
 | - || - || -
 |-
 | Interceptions || 3 || colspan="2"| 2 fois
@@ -40,5 +40,5 @@
 | Balles perdues || 4 || colspan="2"| 2 fois
 | - || - || -
 |-
-| Minutes jouées || 35 || Celtics de Boston || 1 février 2019
+| Minutes jouées || 35 || [[Celtics de Boston]] || {{date|1 février 2019|en basket-ball}}
 | - || - || -
