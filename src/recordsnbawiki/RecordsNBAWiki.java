@@ -29,7 +29,16 @@ public class RecordsNBAWiki {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        obtenirFichierTexte(54148, 3945274);
+        
+        Scanner sc = new Scanner(System.in);
+        
+        System.out.print("Identifiant RealGM du joueur : ");
+        int idRealGM = sc.nextInt();
+        
+        System.out.print("Identifiant ESPN du jour : ");
+        int idESPN = sc.nextInt();
+        
+        obtenirFichierTexte(idRealGM, idESPN); 
     }
 
     /**
@@ -268,6 +277,8 @@ public class RecordsNBAWiki {
         
         try (OutputStream out = new FileOutputStream(file)) {
             out.write(data, 0, data.length);
+            
+            System.out.println("Fichier créé avec succès.");
         } catch (IOException e) {
             System.err.println("Erreur : " + e);
         }
@@ -336,52 +347,57 @@ public class RecordsNBAWiki {
                 String index = ligneSeparee[ligneSeparee.length - 1];
 
                 // on récupère l'adversaire et la date pour tester s'ils sont déjà présents dans le tableau
-                String adversaire = listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase();
-                String date = listeRecords.get(Integer.parseInt(index.trim())).getDate();
-                
-                if (!adversaire.contains("fois") && !adversaire.startsWith("-")) {
+                try {
+                    String adversaire = listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase();
+                    String date = listeRecords.get(Integer.parseInt(index.trim())).getDate();
 
-                    if (Integer.parseInt(index.trim()) < 16) { // < 16 : records en saison régulière
-                        
-                        if (!elementsPresentsSR.contains(adversaire)) { // si c'est la première fois que cet adversaire apparait
-                            elementsPresentsSR.add(adversaire); // ajout de l'adveraire aux éléments déjà présents
+                    if (!adversaire.contains("fois") && !adversaire.startsWith("-")) {
 
-                            // on transforme l'écriture de l'adversaire pour qu'il apparaisse avec un lien interne [[nom_adversaire]]
-                            listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));                            
+                        if (Integer.parseInt(index.trim()) < 16) { // < 16 : records en saison régulière
+
+                            if (!elementsPresentsSR.contains(adversaire)) { // si c'est la première fois que cet adversaire apparait
+                                elementsPresentsSR.add(adversaire); // ajout de l'adveraire aux éléments déjà présents
+
+                                // on transforme l'écriture de l'adversaire pour qu'il apparaisse avec un lien interne [[nom_adversaire]]
+                                listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));
+                            }
+
+                            if (!elementsPresentsSR.contains(date)) { // si c'est la première fois que cette date apparait
+                                elementsPresentsSR.add(date); // ajout de la date aux éléments déjà présents
+
+                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
+
+                            } else { // date déjà présente
+                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
+                            }
+
+                        } else { // >= 16 : records en playoffs
+
+                            if (!elementsPresentsPL.contains(adversaire)) {
+                                elementsPresentsPL.add(adversaire);
+
+                                listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));
+                            }
+
+                            if (!elementsPresentsPL.contains(date)) {
+                                elementsPresentsPL.add(date);
+
+                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
+
+                            } else {
+                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
+                            }
                         }
-                        
-                        if (!elementsPresentsSR.contains(date)) { // si c'est la première fois que cette date apparait
-                            elementsPresentsSR.add(date); // ajout de la date aux éléments déjà présents
-
-                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
-                            
-                        } else { // date déjà présente
-                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
-                        }
-                        
-                    } else { // >= 16 : records en playoffs
-                        
-                        if (!elementsPresentsPL.contains(adversaire)) {
-                            elementsPresentsPL.add(adversaire);
-
-                            listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));
-                        }
-                        
-                        if (!elementsPresentsPL.contains(date)) {
-                            elementsPresentsPL.add(date);
-
-                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
-                            
-                        } else {
-                            listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
-                        }
-                    }                    
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    System.err.println("Le contenu de RealGM n'est pas conforme, le fichier n'a pas pu être créé.");
+                    System.exit(0);
                 }
-               
+                
                 // on remplace l'index du record par celui-ci
-                String nouvelleLigne = ligne.replace(index, listeRecords.get(Integer.parseInt(index.trim())).toString());    
-                      
-                lignes[i] = nouvelleLigne;
+                String nouvelleLigne = ligne.replace(index, listeRecords.get(Integer.parseInt(index.trim())).toString());
+
+                lignes[i] = nouvelleLigne; 
             }
             
             contenuFinal += lignes[i] + "\n";
@@ -574,6 +590,6 @@ public class RecordsNBAWiki {
         
         SimpleDateFormat formatter = new SimpleDateFormat("d MMMM yyyy");
         
-        return "\n''Dernière mise à jour le : {{date-|" + formatter.format(date) + "}}''";
+        return "\n''Dernière mise à jour : {{date-|" + formatter.format(date) + "}}''";
     }
 }

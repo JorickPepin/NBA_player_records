@@ -45,4 +45,4 @@
 |}
 * [[Double-double]] : 0
 * [[Triple-double]] : 0
-''Dernière mise à jour le : {{date-|13 septembre 2020}}''
+''Dernière mise à jour : {{date-|14 septembre 2020}}''
