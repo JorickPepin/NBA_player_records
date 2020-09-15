@@ -8,8 +8,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,7 +33,7 @@ public class RecordsNBAWiki {
         System.out.print("Identifiant RealGM du joueur : ");
         int idRealGM = sc.nextInt();
         
-        System.out.print("Identifiant ESPN du jour : ");
+        System.out.print("Identifiant ESPN du joueur : ");
         int idESPN = sc.nextInt();
         
         obtenirFichierTexte(idRealGM, idESPN); 
@@ -549,33 +547,46 @@ public class RecordsNBAWiki {
     }
     
     /**
-     * Mise en forme des valeurs récupérer sur ESPN
+     * Mise en forme des valeurs récupérées sur ESPN
      * 
      * @param valeurs
      * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
      */
     private static String preparationContenuDD2_TD3(String[] valeurs) {
         
-        int nbDD2_SR = Integer.valueOf(valeurs[0]);
-        int nbTD3_SR = Integer.valueOf(valeurs[1]);
-        
-        int nbDD2_PL = Integer.valueOf(valeurs[2]);
-        int nbTD3_PL = Integer.valueOf(valeurs[3]);
-        
-        int nbTotalDD2 = nbDD2_SR + nbDD2_PL;
-        int nbTotalTD3 = nbTD3_SR + nbTD3_PL;
-        
-        String ligne_DD2 = "* [[Double-double]] : " + nbTotalDD2;
-        String ligne_TD3 = "* [[Triple-double]] : " + nbTotalTD3;
-        
-        if (nbDD2_PL > 0) { // s'il y a des DD2 en playoffs
-            ligne_DD2 += " (dont " + nbDD2_PL + " en playoffs)";
+        int nbDD2_SR;
+        int nbTD3_SR;
+        int nbDD2_PL;
+        int nbTD3_PL;
+
+        String ligne_DD2 = "* [[Double-double]] : ";
+        String ligne_TD3 = "* [[Triple-double]] : ";
+
+        try {
+            nbDD2_SR = Integer.valueOf(valeurs[0]);
+            nbTD3_SR = Integer.valueOf(valeurs[1]);
+
+            nbDD2_PL = Integer.valueOf(valeurs[2]);
+            nbTD3_PL = Integer.valueOf(valeurs[3]);
+
+            int nbTotalDD2 = nbDD2_SR + nbDD2_PL;
+            int nbTotalTD3 = nbTD3_SR + nbTD3_PL;
+
+            ligne_DD2 += nbTotalDD2;
+            ligne_TD3 += nbTotalTD3;
+
+            if (nbDD2_PL > 0) { // s'il y a des DD2 en playoffs
+                ligne_DD2 += " (dont " + nbDD2_PL + " en playoffs)";
+            }
+
+            if (nbTD3_PL > 0) { // s'il y a des TD3 en playoffs
+                ligne_TD3 += " (dont " + nbTD3_PL + " en playoffs)";
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Le contenu d'ESPN n'est pas conforme, le fichier n'a pas pu être créé.");
+            System.exit(0);
         }
-        
-        if (nbTD3_PL > 0) { // s'il y a des TD3 en playoffs
-            ligne_TD3 += " (dont " + nbTD3_PL + " en playoffs)";
-        }
-        
+
         return "|}\n" + ligne_DD2 + "\n" + ligne_TD3 + recuperationDateDuJour();
     }
     
