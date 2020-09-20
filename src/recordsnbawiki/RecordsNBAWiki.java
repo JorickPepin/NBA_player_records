@@ -176,6 +176,8 @@ public class RecordsNBAWiki {
                 System.err.println("Un record est manquant sur RealGM, le fichier n'a pas pu être créé.");
                 System.exit(0);
             }
+            
+            contenu = contenuTraite.toString();
 
         } catch (MalformedURLException e) {
             System.err.println("Erreur : " + e);
@@ -195,7 +197,7 @@ public class RecordsNBAWiki {
      */
     private static ArrayList<Record> traitementContenu(String contenu) {
         ArrayList<Record> listeRecords = new ArrayList();
-
+        
         // on sépare notre texte pour le traiter ligne par ligne
         String[] lignes = contenu.split("\n");
 
