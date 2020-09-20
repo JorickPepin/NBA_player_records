@@ -171,8 +171,11 @@ public class RecordsNBAWiki {
 
                 i++;
             }
-
-            contenu = contenuTraite.toString();
+            
+            if (i < 32) {
+                System.err.println("Un record est manquant sur RealGM, le fichier n'a pas pu être créé.");
+                System.exit(0);
+            }
 
         } catch (MalformedURLException e) {
             System.err.println("Erreur : " + e);
