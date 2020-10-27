@@ -1,4 +1,4 @@
-package recordsnbawiki;
+package recordsnbawiki.packLogic;
 
 /**
  * Classe représentant un record

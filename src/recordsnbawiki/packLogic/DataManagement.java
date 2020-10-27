@@ -1,4 +1,4 @@
-package recordsnbawiki;
+package recordsnbawiki.packLogic;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,32 +21,20 @@ import org.jsoup.nodes.Element;
  *
  * @author Jorick
  */
-public class RecordsNBAWiki {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
-        Scanner sc = new Scanner(System.in);
-        
-        System.out.print("Identifiant RealGM du joueur : ");
-        int idRealGM = sc.nextInt();
-        
-        System.out.print("Identifiant ESPN du joueur : ");
-        int idESPN = sc.nextInt();
-        
+public class DataManagement {
+    
+    public DataManagement(int idRealGM, int idESPN) {
         obtenirFichierTexte(idRealGM, idESPN); 
     }
-
-    /**
+    
+     /**
      * Méthode permettant d'obtenir le fichier texte contenant les records 
      * mis en forme dans le dossier "fichiers" à partir de l'identifiant REALGM du joueur
      * 
      * @param identifiantRealGM = l'identifiant RealGM du joueur
      * @param identifiantESPN = l'identifiant ESPN du joueur
      */
-    private static void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) {
+    private void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) {
         
         // récupération du contenu brut du code source de RealGM
         String contenuRecords = recuperationContenuRealGM(identifiantRealGM); 
@@ -79,7 +67,7 @@ public class RecordsNBAWiki {
      * @param identifiant = l'identifiant REALGM du joueur
      * @return le titre de la page sans balise HTML
      */
-    private static String recuperationTitre(int identifiant) {
+    private String recuperationTitre(int identifiant) {
 
         String titre = null;
 
@@ -119,7 +107,7 @@ public class RecordsNBAWiki {
      * @param identifiant = l'identifiant REALGM du joueur
      * @return le texte présent dans les balises <td> 
      */
-    private static String recuperationContenuRealGM(int identifiant) {
+    private String recuperationContenuRealGM(int identifiant) {
 
         String contenu = "";
 
@@ -172,6 +160,7 @@ public class RecordsNBAWiki {
                 i++;
             }
             
+            // à améliorer : gérer le cas où un record est manquant et le remplacer par - || - || -
             if (i < 32) {
                 System.err.println("Un record est manquant sur RealGM, le fichier n'a pas pu être créé.");
                 System.exit(0);
@@ -195,7 +184,7 @@ public class RecordsNBAWiki {
      * @param contenu
      * @return une liste contenant tous les records
      */
-    private static ArrayList<Record> traitementContenu(String contenu) {
+    private ArrayList<Record> traitementContenu(String contenu) {
         ArrayList<Record> listeRecords = new ArrayList();
         
         // on sépare notre texte pour le traiter ligne par ligne
@@ -271,7 +260,7 @@ public class RecordsNBAWiki {
      * @param contenu
      * @param nom = le nom du joueur
      */
-    private static void ecritureDansFichier(String contenu, String nom) {
+    private void ecritureDansFichier(String contenu, String nom) {
 
         byte data[] = contenu.getBytes();
 
@@ -294,7 +283,7 @@ public class RecordsNBAWiki {
      * @param titre = titre de la page
      * @return prénom_nom du joueur
      */
-    private static String recuperationNomJoueur(String titre) {
+    private String recuperationNomJoueur(String titre) {
         
         String prenom = titre.split(" ")[0];
         String nom = titre.split(" ")[1];
@@ -308,7 +297,7 @@ public class RecordsNBAWiki {
      * @param listeRecords
      * @return le contenu final
      */
-    private static String preparationContenuRecords(ArrayList<Record> listeRecords) {
+    private String preparationContenuRecords(ArrayList<Record> listeRecords) {
             
         String contenuTemplate = "";
         String contenuFinal = "";
@@ -416,7 +405,7 @@ public class RecordsNBAWiki {
      * @param dateBrute = la date au format "MM/dd/yy"
      * @return la date en français
      */
-    private static String transformerDate(String dateBrute) {
+    private String transformerDate(String dateBrute) {
         String dateEnFrancais = "";
 
         try {
@@ -444,7 +433,7 @@ public class RecordsNBAWiki {
      * @param adversaire
      * @return le nom de l'adversaire en français
      */
-    private static String transformerAdversaire(String adversaire) {
+    private String transformerAdversaire(String adversaire) {
         
         String[] nomsCourts = new String[]{"Nuggets", "Timberwolves", "Thunder",
             "Trail Blazers", "Jazz", "Warriors", "Clippers", "Lakers", "Suns",
@@ -481,7 +470,7 @@ public class RecordsNBAWiki {
      * @param adversaire
      * @return (@) [[nom_adversaire]] ou (@) [[Hornets de Charlotte (NBA)|Hornets de Charlotte]]
      */
-    private static String creerAdversaireAvecLienInterne(ArrayList<Record> listeRecords, String index, String adversaire) {
+    private String creerAdversaireAvecLienInterne(ArrayList<Record> listeRecords, String index, String adversaire) {
 
         if (listeRecords.get(Integer.parseInt(index.trim())).getAdversaire().contains("@")) { // si c'est à l'extérieur, on met l'@
 
@@ -507,7 +496,7 @@ public class RecordsNBAWiki {
      * 
      * @param identifiant l'identifiant ESPN du joueur
      */
-    private static String[] recuperationContenuESPN(int identifiant) {
+    private String[] recuperationContenuESPN(int identifiant) {
 
         String DD2_SR = "0";
         String TD3_SR = "0";
@@ -557,7 +546,7 @@ public class RecordsNBAWiki {
      * @param valeurs
      * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
      */
-    private static String preparationContenuDD2_TD3(String[] valeurs) {
+    private String preparationContenuDD2_TD3(String[] valeurs) {
         
         int nbDD2_SR;
         int nbTD3_SR;
@@ -600,7 +589,7 @@ public class RecordsNBAWiki {
      * 
      * @return la date du jour
      */
-    private static String recuperationDateDuJour() {
+    private String recuperationDateDuJour() {
         
         Date date = new Date();
         
