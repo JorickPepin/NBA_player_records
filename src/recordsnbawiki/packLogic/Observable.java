@@ -1,12 +1,12 @@
 package recordsnbawiki.packLogic;
 
-import recordsnbawiki.packVue.Observateur;
+import recordsnbawiki.packVue.Observer;
 
 /**
  *
  * @author Jorick
  */
 public interface Observable {
-    public void addObservateur(Observateur obs);
+    public void addObservateur(Observer obs);
     public void notifyObservateurs(String code);
 }

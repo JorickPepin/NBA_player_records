@@ -8,7 +8,7 @@ import recordsnbawiki.packLogic.Controller;
  *
  * @author Jorick
  */
-public class Window extends JFrame implements Observateur {
+public class Window extends JFrame implements Observer {
 
     private Controller controller;
     

@@ -4,6 +4,6 @@ package recordsnbawiki.packVue;
  *
  * @author Jorick
  */
-public interface Observateur {
+public interface Observer {
     void update(String code);
 }

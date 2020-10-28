@@ -1,7 +1,7 @@
 package recordsnbawiki.packLogic;
 
 import java.util.ArrayList;
-import recordsnbawiki.packVue.Observateur;
+import recordsnbawiki.packVue.Observer;
 
 /**
  *
@@ -9,17 +9,17 @@ import recordsnbawiki.packVue.Observateur;
  */
 public class Controller implements Observable {
 
-    private ArrayList<Observateur> observateurs = new ArrayList<>();
+    private ArrayList<Observer> observateurs = new ArrayList<>();
     
     @Override
     public void notifyObservateurs(String code) {
-        for (Observateur obs : observateurs) {
+        for (Observer obs : observateurs) {
             obs.update(code);
         }
     }
 
     @Override
-    public void addObservateur(Observateur obs) {
+    public void addObservateur(Observer obs) {
         observateurs.add(obs);
     }
     
