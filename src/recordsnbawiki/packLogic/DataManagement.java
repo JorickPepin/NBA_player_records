@@ -23,6 +23,8 @@ import org.jsoup.nodes.Element;
  */
 public class DataManagement {
     
+    private String finalContent;
+    
     public DataManagement(int idRealGM, int idESPN) {
         obtenirFichierTexte(idRealGM, idESPN); 
     }
@@ -57,8 +59,9 @@ public class DataManagement {
         // le contenu final correspond au contenu sur les DD2 et TD3 ajouté à celui sur les records
         String contenuFinal = contenuRecords + contenuDD2_TD3;
         
+        this.finalContent = contenuFinal;
         // écriture du contenu final dans le fichier au nom du joueur
-        ecritureDansFichier(contenuFinal, recuperationNomJoueur(titre));    
+        //ecritureDansFichier(contenuFinal, recuperationNomJoueur(titre));    
     }
 
     /**
@@ -596,5 +599,9 @@ public class DataManagement {
         SimpleDateFormat formatter = new SimpleDateFormat("d MMMM yyyy");
         
         return "\n''Dernière mise à jour : {{date-|" + formatter.format(date) + "}}''";
+    }
+
+    public String getFinalContent() {
+        return finalContent;
     }
 }
