@@ -78,12 +78,12 @@ public class Window extends JFrame implements Observer {
                 stop = true;
                 break;
             case "errorNoPlayerRealGM":
-                label_alert.setText("L'identifiant RealGM ne correspond a aucun joueur.");
+                label_alert.setText("L'identifiant RealGM ne correspond à aucun joueur.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
             case "errorNoPlayerESPN":
-                label_alert.setText("L'identifiant ESPN ne correspond a aucun joueur.");
+                label_alert.setText("L'identifiant ESPN ne correspond à aucun joueur.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;

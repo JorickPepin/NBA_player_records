@@ -1,9 +1,8 @@
 package recordsnbawiki.packLogic;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import recordsnbawiki.packVue.Observer;
 import recordsnbawiki.utils.ESPNException;
 import recordsnbawiki.utils.NoPlayerESPNException;
@@ -67,7 +66,7 @@ public class Controller implements Observable {
             notifyObservateurs("errorNoPlayerRealGM");
         } catch (NoPlayerESPNException e) {
             notifyObservateurs("errorNoPlayerESPN");
-        } catch (Exception e) {
+        } catch (IOException | ParseException e) {
             notifyObservateurs("error");
         }
     }

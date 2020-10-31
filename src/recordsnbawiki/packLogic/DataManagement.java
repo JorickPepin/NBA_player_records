@@ -2,10 +2,8 @@ package recordsnbawiki.packLogic;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -13,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -472,6 +471,8 @@ public class DataManagement {
      * 
      * @param identifiant l'identifiant ESPN du joueur
      * @return 
+     * @throws recordsnbawiki.utils.NoPlayerESPNException 
+     * @throws java.io.IOException 
      */
     public String[] recuperationContenuESPN(int identifiant) throws NoPlayerESPNException, IOException {
 
@@ -482,15 +483,13 @@ public class DataManagement {
         try {
             Document document = Jsoup.connect("https://www.espn.com/nba/player/stats/_/id/" + identifiant).get();
             
-            if (document.body().wholeText().contains("Error404")) {
-                throw new NoPlayerESPNException();
-            }
-            
             // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
             DD2_SR = document.select("span.fw-bold").get(36).text();
             // le nombre de triple-double en saison régulière correspond au 37e élément <span class="fw-bold">
             TD3_SR = document.select("span.fw-bold").get(37).text();
             
+        } catch (HttpStatusException e) {
+            throw new NoPlayerESPNException();
         } catch (IOException e) {
             throw e;
         }
@@ -514,6 +513,8 @@ public class DataManagement {
                 TD3_PL = document.select("span.fw-bold").get(37).text();
             }
             
+        } catch (HttpStatusException e) {
+            throw new NoPlayerESPNException();
         } catch (IOException e) {
             throw e;
         }
