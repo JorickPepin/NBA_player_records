@@ -1,5 +1,9 @@
 # Wikipedia-help
 
+**In progress: retrieving content from a user interface rather than from text files.**
+
+---
+
 This program is a help to make **NBA players maintenance** easier on the **French Wikipedia**.
 
 It enables to get the **career bests** and the **number of double-double/triple-double** of an NBA player in a **text file**. The result of the retrieval is formatted to only have to paste it on the encyclopedia.
