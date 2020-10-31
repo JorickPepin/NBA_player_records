@@ -66,10 +66,29 @@ public class Window extends JFrame implements Observer {
                 });
                 t.setRepeats(false);
                 t.start();
-  
                 break;
             case "errorRealGM":
                 label_alert.setText("Le contenu de RealGM n'a pas pu être récupéré.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "errorESPN":
+                label_alert.setText("Le contenu d'ESPN n'a pas pu être récupéré.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "errorNoPlayerRealGM":
+                label_alert.setText("L'identifiant RealGM ne correspond a aucun joueur.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "errorNoPlayerESPN":
+                label_alert.setText("L'identifiant ESPN ne correspond a aucun joueur.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "error":
+                label_alert.setText("Le contenu n'a pas pu être récupéré.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
@@ -101,7 +120,7 @@ public class Window extends JFrame implements Observer {
         disableComponents(true);
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
         
-        Thread thread = new Thread(new Runnable() {
+        new Thread(new Runnable() {
             public void run() {
                 try {
                     
@@ -109,7 +128,6 @@ public class Window extends JFrame implements Observer {
                      
                     if (!stop) {
                         textArea_content.setText(dataManagement.getFinalContent());
-                     
                         controller.notifyObservateurs("copyContent");
                     }
                     
@@ -119,8 +137,7 @@ public class Window extends JFrame implements Observer {
                     
                 } catch (Exception e) {}
             }
-        });
-        thread.start();     
+        }).start();     
     }
     
     /**
@@ -260,28 +277,28 @@ public class Window extends JFrame implements Observer {
 
     private void button_submitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_submitActionPerformed
         resetComponents();
-        
+
         String RealGM_id = "";
         String ESPN_id = "";
-        
+
         boolean entriesAreValid = true;
-        
+
         Border redBorder = BorderFactory.createLineBorder(Color.RED, 1);
-        
+
         if (textField_RealGM.getText().length() > 0) {
             RealGM_id = textField_RealGM.getText();
         } else {
             textField_RealGM.setBorder(redBorder);
             entriesAreValid = false;
         }
-       
+
         if (textField_ESPN.getText().length() > 0) {
             ESPN_id = textField_ESPN.getText();
         } else {
             textField_ESPN.setBorder(redBorder);
             entriesAreValid = false;
         }
-        
+
         if (entriesAreValid) {
             if(!isNumeric(RealGM_id)) {
                 textField_RealGM.setBorder(redBorder);
@@ -289,16 +306,16 @@ public class Window extends JFrame implements Observer {
             if (!isNumeric(ESPN_id)) {
                 textField_ESPN.setBorder(redBorder);
             }
-            
+
             if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) {
                 addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
             } else {
                 controller.notifyObservateurs("invalidEntry");
-            }                      
-        } else {   
+            }
+        } else {
             controller.notifyObservateurs("fieldsNotFilled");
         }
-        
+
     }//GEN-LAST:event_button_submitActionPerformed
 
     private void button_copyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_copyActionPerformed

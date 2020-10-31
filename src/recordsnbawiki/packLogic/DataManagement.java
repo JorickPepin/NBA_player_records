@@ -16,6 +16,9 @@ import java.util.Scanner;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import recordsnbawiki.utils.ESPNException;
+import recordsnbawiki.utils.NoPlayerESPNException;
+import recordsnbawiki.utils.NoPlayerRealGMException;
 import recordsnbawiki.utils.RealGMException;
 
 /**
@@ -36,7 +39,7 @@ public class DataManagement {
      * @param identifiant = l'identifiant REALGM du joueur
      * @return le titre de la page sans balise HTML
      */
-    public String recuperationTitre(int identifiant) {
+    public String recuperationTitre(int identifiant) throws MalformedURLException, IOException {
 
         String titre = null;
 
@@ -57,9 +60,9 @@ public class DataManagement {
             }
 
         } catch (MalformedURLException e) {
-            System.err.println("Erreur : " + e);
+            throw e;
         } catch (IOException e) {
-            System.err.println("Erreur : " + e);
+            throw e;
         }
 
         // récupération du titre sans la balise <title>
@@ -77,7 +80,7 @@ public class DataManagement {
      * @return le texte présent dans les balises <td> 
      * @throws RealGMException
      */
-    public String recuperationContenuRealGM(int identifiant) throws RealGMException {
+    public String recuperationContenuRealGM(int identifiant) throws RealGMException, NoPlayerRealGMException {
 
         String contenu = "";
 
@@ -95,6 +98,10 @@ public class DataManagement {
             String ligne;
             while ((ligne = br.readLine()) != null) {
 
+                if (ligne.contains("err404")) {
+                    throw new NoPlayerRealGMException();
+                }
+                
                 // on détermine des "balises" pour ne récupérer que le contenu utile
                 if (ligne.equals("<h2>NBA Regular Season Career Highs</h2>")) {
                     contenuValide = true;
@@ -152,8 +159,9 @@ public class DataManagement {
      * 
      * @param contenu
      * @return une liste contenant tous les records
+     * @throws java.text.ParseException
      */
-    public ArrayList<Record> traitementContenu(String contenu) {
+    public ArrayList<Record> traitementContenu(String contenu) throws ParseException {
         ArrayList<Record> listeRecords = new ArrayList();
         
         // on sépare notre texte pour le traiter ligne par ligne
@@ -248,26 +256,24 @@ public class DataManagement {
     
     /**
      * Méthode permettant de récupérer le nom et le prénom du joueur 
-     * à partir du titre de la page
+     * à partir du titre de la page RealGM
      *
      * @param titre = titre de la page
-     * @return prénom_nom du joueur
+     * @return string contenant prénom et nom du joueur
      */
-    private String recuperationNomJoueur(String titre) {
+    public String recuperationNomJoueurRealGM(String titre) {
         
-        String prenom = titre.split(" ")[0];
-        String nom = titre.split(" ")[1];
-
-        return prenom + "_" + nom;
+        return titre.substring(0, titre.indexOf(" Career"));
     }
  
+  
     /**
      * Méthode permettant d'inscrire les records dans le template
      * 
      * @param listeRecords
      * @return le contenu final
      */
-    public String preparationContenuRecords(ArrayList<Record> listeRecords) {
+    public String preparationContenuRecords(ArrayList<Record> listeRecords) throws IOException {
             
         String contenuTemplate = "";
         String contenuFinal = "";
@@ -287,7 +293,7 @@ public class DataManagement {
             contenuTemplate = sb.toString();
             
         } catch (IOException e) {
-            System.err.println("Erreur : " + e);
+            throw e;
         }
         
         // séparation du texte pour le traiter ligne par ligne
@@ -375,7 +381,7 @@ public class DataManagement {
      * @param dateBrute = la date au format "MM/dd/yy"
      * @return la date en français
      */
-    private String transformerDate(String dateBrute) {
+    private String transformerDate(String dateBrute) throws ParseException {
         String dateEnFrancais = "";
 
         try {
@@ -389,7 +395,7 @@ public class DataManagement {
             dateEnFrancais = formater.format(date);
 
         } catch (ParseException e) {
-            System.err.println("Erreur : " + e);
+            throw e;
         }
 
         return dateEnFrancais;
@@ -467,7 +473,7 @@ public class DataManagement {
      * @param identifiant l'identifiant ESPN du joueur
      * @return 
      */
-    public String[] recuperationContenuESPN(int identifiant) {
+    public String[] recuperationContenuESPN(int identifiant) throws NoPlayerESPNException, IOException {
 
         String DD2_SR = "0";
         String TD3_SR = "0";
@@ -476,13 +482,17 @@ public class DataManagement {
         try {
             Document document = Jsoup.connect("https://www.espn.com/nba/player/stats/_/id/" + identifiant).get();
             
+            if (document.body().wholeText().contains("Error404")) {
+                throw new NoPlayerESPNException();
+            }
+            
             // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
             DD2_SR = document.select("span.fw-bold").get(36).text();
             // le nombre de triple-double en saison régulière correspond au 37e élément <span class="fw-bold">
             TD3_SR = document.select("span.fw-bold").get(37).text();
             
         } catch (IOException e) {
-            System.err.println("Erreur : " + e);
+            throw e;
         }
 
         String DD2_PL = "0";
@@ -505,7 +515,7 @@ public class DataManagement {
             }
             
         } catch (IOException e) {
-            System.err.println("Erreur : " + e);
+            throw e;
         }
               
         return new String[]{DD2_SR, TD3_SR, DD2_PL, TD3_PL};
@@ -517,7 +527,7 @@ public class DataManagement {
      * @param valeurs
      * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
      */
-    public String preparationContenuDD2_TD3(String[] valeurs) {
+    public String preparationContenuDD2_TD3(String[] valeurs) throws ESPNException {
         
         int nbDD2_SR;
         int nbTD3_SR;
@@ -548,8 +558,7 @@ public class DataManagement {
                 ligne_TD3 += " (dont " + nbTD3_PL + " en playoffs)";
             }
         } catch (NumberFormatException e) {
-            System.err.println("Le contenu d'ESPN n'est pas conforme, le fichier n'a pas pu être créé.");
-            System.exit(0);
+            throw new ESPNException();
         }
 
         return "|}\n" + ligne_DD2 + "\n" + ligne_TD3 + recuperationDateDuJour();

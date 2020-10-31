@@ -1,9 +1,13 @@
 package recordsnbawiki.packLogic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import recordsnbawiki.packVue.Observer;
+import recordsnbawiki.utils.ESPNException;
+import recordsnbawiki.utils.NoPlayerESPNException;
+import recordsnbawiki.utils.NoPlayerRealGMException;
 import recordsnbawiki.utils.RealGMException;
 
 /**
@@ -28,8 +32,8 @@ public class Controller implements Observable {
      * @param identifiantRealGM = l'identifiant RealGM du joueur
      * @param identifiantESPN = l'identifiant ESPN du joueur
      */
-    public void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) {
-
+    public void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) throws IOException {
+        
         // récupération du contenu brut du code source de RealGM
         String contenuRecords;        
         try {
@@ -55,8 +59,16 @@ public class Controller implements Observable {
             
             dataManagement.setFinalContent(contenuFinal);            
             
-        } catch (RealGMException ex) {
+        } catch (RealGMException e) {
             notifyObservateurs("errorRealGM");
+        } catch (ESPNException e) {
+            notifyObservateurs("errorESPN");
+        } catch (NoPlayerRealGMException e) {
+            notifyObservateurs("errorNoPlayerRealGM");
+        } catch (NoPlayerESPNException e) {
+            notifyObservateurs("errorNoPlayerESPN");
+        } catch (Exception e) {
+            notifyObservateurs("error");
         }
     }
     
