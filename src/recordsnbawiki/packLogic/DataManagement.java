@@ -16,6 +16,7 @@ import java.util.Scanner;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import recordsnbawiki.utils.RealGMException;
 
 /**
  *
@@ -25,52 +26,17 @@ public class DataManagement {
     
     private String finalContent;
     
-    public DataManagement(int idRealGM, int idESPN) {
-        obtenirFichierTexte(idRealGM, idESPN); 
+    public DataManagement() {
+        
     }
     
-     /**
-     * Méthode permettant d'obtenir le fichier texte contenant les records 
-     * mis en forme dans le dossier "fichiers" à partir de l'identifiant REALGM du joueur
-     * 
-     * @param identifiantRealGM = l'identifiant RealGM du joueur
-     * @param identifiantESPN = l'identifiant ESPN du joueur
-     */
-    private void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) {
-        
-        // récupération du contenu brut du code source de RealGM
-        String contenuRecords = recuperationContenuRealGM(identifiantRealGM); 
-        
-        // récupération du titre de la page
-        String titre = recuperationTitre(identifiantRealGM);
-
-        // traitement du contenu pour obtenir la liste des records
-        ArrayList<Record> listeRecords = traitementContenu(contenuRecords);
-        
-        // ajout des informations des records au template
-        contenuRecords = preparationContenuRecords(listeRecords);
-        
-        // récupération du contenu du code source d'ESPN
-        String[] valeursDD2_TD3 = recuperationContenuESPN(identifiantESPN);
-        
-        // ajout des informations des double-doubles et triple-doubles au template
-        String contenuDD2_TD3 = preparationContenuDD2_TD3(valeursDD2_TD3);
-        
-        // le contenu final correspond au contenu sur les DD2 et TD3 ajouté à celui sur les records
-        String contenuFinal = contenuRecords + contenuDD2_TD3;
-        
-        this.finalContent = contenuFinal;
-        // écriture du contenu final dans le fichier au nom du joueur
-        //ecritureDansFichier(contenuFinal, recuperationNomJoueur(titre));    
-    }
-
     /**
      * Méthode permettant de récupérer le titre de la page sans balise HTML
      *
      * @param identifiant = l'identifiant REALGM du joueur
      * @return le titre de la page sans balise HTML
      */
-    private String recuperationTitre(int identifiant) {
+    public String recuperationTitre(int identifiant) {
 
         String titre = null;
 
@@ -109,8 +75,9 @@ public class DataManagement {
      *
      * @param identifiant = l'identifiant REALGM du joueur
      * @return le texte présent dans les balises <td> 
+     * @throws RealGMException
      */
-    private String recuperationContenuRealGM(int identifiant) {
+    public String recuperationContenuRealGM(int identifiant) throws RealGMException {
 
         String contenu = "";
 
@@ -165,8 +132,7 @@ public class DataManagement {
             
             // à améliorer : gérer le cas où un record est manquant et le remplacer par - || - || -
             if (i < 32) {
-                System.err.println("Un record est manquant sur RealGM, le fichier n'a pas pu être créé.");
-                System.exit(0);
+                throw new RealGMException();
             }
             
             contenu = contenuTraite.toString();
@@ -187,7 +153,7 @@ public class DataManagement {
      * @param contenu
      * @return une liste contenant tous les records
      */
-    private ArrayList<Record> traitementContenu(String contenu) {
+    public ArrayList<Record> traitementContenu(String contenu) {
         ArrayList<Record> listeRecords = new ArrayList();
         
         // on sépare notre texte pour le traiter ligne par ligne
@@ -263,7 +229,7 @@ public class DataManagement {
      * @param contenu
      * @param nom = le nom du joueur
      */
-    private void ecritureDansFichier(String contenu, String nom) {
+    /*private void ecritureDansFichier(String contenu, String nom) {
 
         byte data[] = contenu.getBytes();
 
@@ -278,7 +244,8 @@ public class DataManagement {
             System.err.println("Erreur : " + e);
         }
     }
-
+*/
+    
     /**
      * Méthode permettant de récupérer le nom et le prénom du joueur 
      * à partir du titre de la page
@@ -300,7 +267,7 @@ public class DataManagement {
      * @param listeRecords
      * @return le contenu final
      */
-    private String preparationContenuRecords(ArrayList<Record> listeRecords) {
+    public String preparationContenuRecords(ArrayList<Record> listeRecords) {
             
         String contenuTemplate = "";
         String contenuFinal = "";
@@ -498,8 +465,9 @@ public class DataManagement {
      * régulière et en playoffs sur espn.com
      * 
      * @param identifiant l'identifiant ESPN du joueur
+     * @return 
      */
-    private String[] recuperationContenuESPN(int identifiant) {
+    public String[] recuperationContenuESPN(int identifiant) {
 
         String DD2_SR = "0";
         String TD3_SR = "0";
@@ -549,7 +517,7 @@ public class DataManagement {
      * @param valeurs
      * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
      */
-    private String preparationContenuDD2_TD3(String[] valeurs) {
+    public String preparationContenuDD2_TD3(String[] valeurs) {
         
         int nbDD2_SR;
         int nbTD3_SR;
@@ -603,5 +571,9 @@ public class DataManagement {
 
     public String getFinalContent() {
         return finalContent;
+    }
+
+    public void setFinalContent(String finalContent) {
+        this.finalContent = finalContent;
     }
 }

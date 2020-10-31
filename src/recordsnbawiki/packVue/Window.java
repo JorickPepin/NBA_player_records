@@ -1,11 +1,14 @@
 package recordsnbawiki.packVue;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.Timer;
 import javax.swing.border.Border;
 import static org.jsoup.internal.StringUtil.isNumeric;
 import recordsnbawiki.packLogic.Controller;
@@ -23,12 +26,13 @@ public class Window extends JFrame implements Observer {
     
     /**
      * Creates new form Window
-     * @param controller
      */
-    public Window(Controller controller) {
+    public Window() {
         initComponents();
         
-        this.controller = controller;
+        this.dataManagement = new DataManagement();
+        this.controller = new Controller(dataManagement);
+        
         this.controller.addObservateur(this);
         
         this.setLocationRelativeTo(null);
@@ -48,23 +52,44 @@ public class Window extends JFrame implements Observer {
                 label_alert.setForeground(Color.RED);
                 break;
             case "loading":
-                label_alert.setText("Chargement...");
+                label_alert.setText("Chargement ...");
+                label_alert.setForeground(Color.BLACK);
                 break;
             case "copyContent":
                 addContentToClipboard();
-                label_alert.setText("Contenu copié dans le presse papier.");
+                String text = "Contenu copié dans le presse-papier.";
+                label_alert.setText(text);
+                label_alert.setForeground(Color.BLACK);
+                
+                Timer t = new Timer(3000, (ActionEvent e) -> {
+                    if (text.equals(label_alert.getText())) label_alert.setText(null);
+                });
+                t.setRepeats(false);
+                t.start();
+  
+                break;
+            case "errorRealGM":
+                label_alert.setText("Le contenu de RealGM n'a pas pu être récupéré.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
                 break;
         }
     }
 
-    /**
-     * Set black borders to textFields
-     */
-    private void initTextFields() {
+    private void resetComponents() {
         textField_RealGM.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         textField_ESPN.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        textArea_content.setText(""); // clear the textArea
     }
 
+    private void disableComponents(boolean value) {
+        button_submit.setEnabled(!value);
+        button_copy.setEnabled(!value);
+        textField_RealGM.setEnabled(!value);
+        textField_ESPN.setEnabled(!value);
+        textArea_content.setEnabled(!value);
+    }
+    
     /**
      * Add the content to the textArea
      * @param RealGM_id
@@ -72,26 +97,37 @@ public class Window extends JFrame implements Observer {
      */
     private void addContentToTextArea(int RealGM_id, int ESPN_id) {
         controller.notifyObservateurs("loading");
+    
+        disableComponents(true);
+        setCursor(new Cursor(Cursor.WAIT_CURSOR));
         
-        new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             public void run() {
                 try {
-                    dataManagement = new DataManagement(RealGM_id, ESPN_id);
                     
-                    textArea_content.setText(dataManagement.getFinalContent());
-                    textArea_content.setEditable(true);
+                    controller.obtenirFichierTexte(RealGM_id, ESPN_id); 
+                     
+                    if (!stop) {
+                        textArea_content.setText(dataManagement.getFinalContent());
+                     
+                        controller.notifyObservateurs("copyContent");
+                    }
                     
-                    controller.notifyObservateurs("copyContent");
+                    disableComponents(false);
+                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    stop = false;
+                    
                 } catch (Exception e) {}
             }
-        }).start();     
+        });
+        thread.start();     
     }
     
     /**
      * Add the content to the clipboard
      */
     private void addContentToClipboard() {
-        StringSelection stringSelection = new StringSelection(dataManagement.getFinalContent());
+        StringSelection stringSelection = new StringSelection(textArea_content.getText());
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
     }
@@ -167,9 +203,9 @@ public class Window extends JFrame implements Observer {
                 .addContainerGap(15, Short.MAX_VALUE))
         );
 
-        textArea_content.setEditable(false);
         textArea_content.setColumns(20);
         textArea_content.setRows(5);
+        textArea_content.setEnabled(false);
         jScrollPane1.setViewportView(textArea_content);
 
         label_alert.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -177,6 +213,7 @@ public class Window extends JFrame implements Observer {
 
         button_copy.setText("Copier");
         button_copy.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        button_copy.setEnabled(false);
         button_copy.setFocusPainted(false);
         button_copy.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -209,9 +246,9 @@ public class Window extends JFrame implements Observer {
             .addGroup(layout.createSequentialGroup()
                 .addGap(20, 20, 20)
                 .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(6, 6, 6)
-                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(2, 2, 2)
+                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
                 .addComponent(button_copy)
@@ -222,7 +259,7 @@ public class Window extends JFrame implements Observer {
     }// </editor-fold>//GEN-END:initComponents
 
     private void button_submitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_submitActionPerformed
-        initTextFields();
+        resetComponents();
         
         String RealGM_id = "";
         String ESPN_id = "";
@@ -268,7 +305,8 @@ public class Window extends JFrame implements Observer {
         controller.notifyObservateurs("copyContent");
     }//GEN-LAST:event_button_copyActionPerformed
 
-
+    private boolean stop = false;
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton button_copy;
     private javax.swing.JButton button_submit;
