@@ -1,11 +1,13 @@
 package recordsnbawiki.packVue;
 
 import java.awt.Color;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPasswordField;
 import javax.swing.border.Border;
+import static org.jsoup.internal.StringUtil.isNumeric;
 import recordsnbawiki.packLogic.Controller;
 import recordsnbawiki.packLogic.DataManagement;
 
@@ -27,6 +29,7 @@ public class Window extends JFrame implements Observer {
         initComponents();
         
         this.controller = controller;
+        this.controller.addObservateur(this);
         
         this.setLocationRelativeTo(null);
         this.setVisible(true);
@@ -36,18 +39,63 @@ public class Window extends JFrame implements Observer {
     public void update(String code) {
         
         switch (code) {
-            case "entriesAreInvalid":
-                label_alert.setText("Tous les champs ne sont pas remplis");
+            case "fieldsNotFilled":
+                label_alert.setText("Tous les champs ne sont pas remplis.");
                 label_alert.setForeground(Color.RED);
-                label_alert.setHorizontalAlignment(JLabel.CENTER);
+                break;
+            case "invalidEntry":
+                label_alert.setText("Les identifiants doivent être des entiers.");
+                label_alert.setForeground(Color.RED);
+                break;
+            case "loading":
+                label_alert.setText("Chargement...");
+                break;
+            case "copyContent":
+                addContentToClipboard();
+                label_alert.setText("Contenu copié dans le presse papier.");
                 break;
         }
     }
 
+    /**
+     * Set black borders to textFields
+     */
     private void initTextFields() {
         textField_RealGM.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         textField_ESPN.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
     }
+
+    /**
+     * Add the content to the textArea
+     * @param RealGM_id
+     * @param ESPN_id 
+     */
+    private void addContentToTextArea(int RealGM_id, int ESPN_id) {
+        controller.notifyObservateurs("loading");
+        
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    dataManagement = new DataManagement(RealGM_id, ESPN_id);
+                    
+                    textArea_content.setText(dataManagement.getFinalContent());
+                    textArea_content.setEditable(true);
+                    
+                    controller.notifyObservateurs("copyContent");
+                } catch (Exception e) {}
+            }
+        }).start();     
+    }
+    
+    /**
+     * Add the content to the clipboard
+     */
+    private void addContentToClipboard() {
+        StringSelection stringSelection = new StringSelection(dataManagement.getFinalContent());
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+    }
+    
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -60,6 +108,7 @@ public class Window extends JFrame implements Observer {
         jScrollPane1 = new javax.swing.JScrollPane();
         textArea_content = new javax.swing.JTextArea();
         label_alert = new javax.swing.JLabel();
+        button_copy = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -77,6 +126,7 @@ public class Window extends JFrame implements Observer {
 
         button_submit.setText("Valider");
         button_submit.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        button_submit.setFocusPainted(false);
         button_submit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 button_submitActionPerformed(evt);
@@ -99,7 +149,7 @@ public class Window extends JFrame implements Observer {
                         .addGroup(panel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(textField_RealGM, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(textField_ESPN, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(69, 69, 69))
+                .addGap(63, 63, 63))
         );
         panel1Layout.setVerticalGroup(
             panel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -114,29 +164,44 @@ public class Window extends JFrame implements Observer {
                     .addComponent(textField_ESPN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(button_submit)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
+        textArea_content.setEditable(false);
         textArea_content.setColumns(20);
         textArea_content.setRows(5);
         jScrollPane1.setViewportView(textArea_content);
 
+        label_alert.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         label_alert.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+
+        button_copy.setText("Copier");
+        button_copy.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        button_copy.setFocusPainted(false);
+        button_copy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                button_copyActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(50, 50, 50)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(100, 100, 100)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(button_copy)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addGap(100, 100, 100)
+                                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createSequentialGroup()
+                            .addGap(50, 50, 50)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(50, 50, 50))
         );
         layout.setVerticalGroup(
@@ -147,8 +212,10 @@ public class Window extends JFrame implements Observer {
                 .addGap(6, 6, 6)
                 .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(26, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                .addComponent(button_copy)
+                .addContainerGap())
         );
 
         pack();
@@ -172,27 +239,40 @@ public class Window extends JFrame implements Observer {
         }
        
         if (textField_ESPN.getText().length() > 0) {
-            RealGM_id = textField_ESPN.getText();
+            ESPN_id = textField_ESPN.getText();
         } else {
             textField_ESPN.setBorder(redBorder);
             entriesAreValid = false;
         }
         
         if (entriesAreValid) {
-            this.dataManagement = new DataManagement(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
-        
-            this.textArea_content.setText(dataManagement.getFinalContent());
-        } else {
-            update("entriesAreInvalid");
+            if(!isNumeric(RealGM_id)) {
+                textField_RealGM.setBorder(redBorder);
+            }
+            if (!isNumeric(ESPN_id)) {
+                textField_ESPN.setBorder(redBorder);
+            }
+            
+            if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) {
+                addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
+            } else {
+                controller.notifyObservateurs("invalidEntry");
+            }                      
+        } else {   
+            controller.notifyObservateurs("fieldsNotFilled");
         }
         
     }//GEN-LAST:event_button_submitActionPerformed
 
+    private void button_copyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_copyActionPerformed
+        controller.notifyObservateurs("copyContent");
+    }//GEN-LAST:event_button_copyActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton button_copy;
     private javax.swing.JButton button_submit;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel label_ESPN;
     private javax.swing.JLabel label_RealGM;
     private javax.swing.JLabel label_alert;

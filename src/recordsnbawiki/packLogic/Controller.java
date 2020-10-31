@@ -9,7 +9,11 @@ import recordsnbawiki.packVue.Observer;
  */
 public class Controller implements Observable {
 
-    private ArrayList<Observer> observateurs = new ArrayList<>();
+    private ArrayList<Observer> observateurs;
+    
+    public Controller() {
+        this.observateurs = new ArrayList<>();
+    }
     
     @Override
     public void notifyObservateurs(String code) {
