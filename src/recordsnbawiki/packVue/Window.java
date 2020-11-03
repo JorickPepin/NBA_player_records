@@ -87,8 +87,8 @@ public class Window extends JFrame implements Observer {
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
-            case "error":
-                label_alert.setText("Le contenu n'a pas pu être récupéré.");
+            case "errorNeverPlayedInNBARealGM":
+                label_alert.setText("Le joueur n'a jamais joué en NBA.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
@@ -124,7 +124,7 @@ public class Window extends JFrame implements Observer {
             public void run() {
                 try {
                     
-                    controller.obtenirFichierTexte(RealGM_id, ESPN_id); 
+                    controller.generateContent(RealGM_id, ESPN_id); 
                      
                     if (!stop) {
                         textArea_content.setText(dataManagement.getFinalContent());
@@ -164,9 +164,12 @@ public class Window extends JFrame implements Observer {
         button_copy = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Records joueur NBA");
+        setResizable(false);
 
         panel1.setPreferredSize(new java.awt.Dimension(300, 122));
 
+        textField_RealGM.setToolTipText("");
         textField_RealGM.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         textField_RealGM.setPreferredSize(new java.awt.Dimension(250, 20));
 
@@ -220,9 +223,9 @@ public class Window extends JFrame implements Observer {
                 .addContainerGap(15, Short.MAX_VALUE))
         );
 
+        textArea_content.setEditable(false);
         textArea_content.setColumns(20);
         textArea_content.setRows(5);
-        textArea_content.setEnabled(false);
         jScrollPane1.setViewportView(textArea_content);
 
         label_alert.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -230,7 +233,6 @@ public class Window extends JFrame implements Observer {
 
         button_copy.setText("Copier");
         button_copy.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        button_copy.setEnabled(false);
         button_copy.setFocusPainted(false);
         button_copy.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -263,9 +265,9 @@ public class Window extends JFrame implements Observer {
             .addGroup(layout.createSequentialGroup()
                 .addGap(20, 20, 20)
                 .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(2, 2, 2)
-                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(6, 6, 6)
+                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
                 .addComponent(button_copy)

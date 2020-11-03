@@ -1,12 +1,8 @@
 package recordsnbawiki.packLogic;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import recordsnbawiki.packVue.Observer;
 import recordsnbawiki.utils.ESPNException;
-import recordsnbawiki.utils.NoPlayerESPNException;
-import recordsnbawiki.utils.NoPlayerRealGMException;
 import recordsnbawiki.utils.RealGMException;
 
 /**
@@ -25,49 +21,37 @@ public class Controller implements Observable {
     }     
  
     /**
-     * Méthode permettant d'obtenir le fichier texte contenant les records 
-     * mis en forme dans le dossier "fichiers" à partir de l'identifiant REALGM du joueur
+     * Génère le fichier texte contenant les records à partir de l'identifiant 
+     * RealGM et ESPN du joueur
      * 
-     * @param identifiantRealGM = l'identifiant RealGM du joueur
-     * @param identifiantESPN = l'identifiant ESPN du joueur
+     * @param identifiantRealGM - l'identifiant RealGM du joueur
+     * @param identifiantESPN - l'identifiant ESPN du joueur
+     * @throws RealGMException
+     * @throws ESPNException
      */
-    public void obtenirFichierTexte(int identifiantRealGM, int identifiantESPN) throws IOException {
-        
-        // récupération du contenu brut du code source de RealGM
-        String contenuRecords;        
+    public void generateContent(int identifiantRealGM, int identifiantESPN) throws ESPNException, RealGMException {
+   
         try {
-            contenuRecords = dataManagement.recuperationContenuRealGM(identifiantRealGM);
+            String contenuFinalRealGM = dataManagement.getRealGMContent(identifiantRealGM);
+            String contenuFinalESPN = dataManagement.getESPNContent(identifiantESPN);
 
-            // récupération du titre de la page
-            String titre = dataManagement.recuperationTitre(identifiantRealGM);
-
-            // traitement du contenu pour obtenir la liste des records
-            ArrayList<Record> listeRecords = dataManagement.traitementContenu(contenuRecords);
-
-            // ajout des informations des records au template
-            contenuRecords = dataManagement.preparationContenuRecords(listeRecords);
-
-            // récupération du contenu du code source d'ESPN
-            String[] valeursDD2_TD3 = dataManagement.recuperationContenuESPN(identifiantESPN);
-
-            // ajout des informations des double-doubles et triple-doubles au template
-            String contenuDD2_TD3 = dataManagement.preparationContenuDD2_TD3(valeursDD2_TD3);
-
-            // le contenu final correspond au contenu sur les DD2 et TD3 ajouté à celui sur les records
-            String contenuFinal = contenuRecords + contenuDD2_TD3;
-            
-            dataManagement.setFinalContent(contenuFinal);            
+            String contenuFinal = contenuFinalRealGM + contenuFinalESPN;
+            dataManagement.setFinalContent(contenuFinal);
             
         } catch (RealGMException e) {
-            notifyObservateurs("errorRealGM");
+            if ("ID issue".equals(e.getMessage())) {
+                notifyObservateurs("errorNoPlayerRealGM");
+            } else if ("never played in NBA".equals(e.getMessage())) {
+                notifyObservateurs("errorNeverPlayedInNBARealGM");
+            } else {
+                notifyObservateurs("errorRealGM");
+            }
         } catch (ESPNException e) {
-            notifyObservateurs("errorESPN");
-        } catch (NoPlayerRealGMException e) {
-            notifyObservateurs("errorNoPlayerRealGM");
-        } catch (NoPlayerESPNException e) {
-            notifyObservateurs("errorNoPlayerESPN");
-        } catch (IOException | ParseException e) {
-            notifyObservateurs("error");
+            if ("ID issue".equals(e.getMessage())) {
+                notifyObservateurs("errorNoPlayerESPN");
+            } else {
+                notifyObservateurs("errorESPN");
+            }
         }
     }
     

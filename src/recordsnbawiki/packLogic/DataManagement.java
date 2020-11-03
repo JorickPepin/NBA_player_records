@@ -1,388 +1,314 @@
 package recordsnbawiki.packLogic;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import recordsnbawiki.utils.ESPNException;
-import recordsnbawiki.utils.NoPlayerESPNException;
-import recordsnbawiki.utils.NoPlayerRealGMException;
 import recordsnbawiki.utils.RealGMException;
 
 /**
- *
+ * Récupération et traitement du contenu
+ * 
  * @author Jorick
  */
 public class DataManagement {
     
-    private String finalContent;
-    
-    public DataManagement() {
-        
-    }
+    private String contenuFinal;
     
     /**
-     * Méthode permettant de récupérer le titre de la page sans balise HTML
-     *
-     * @param identifiant = l'identifiant REALGM du joueur
-     * @return le titre de la page sans balise HTML
+     * Titre de la page web RealGM pour récupérer le nom du joueur
      */
-    public String recuperationTitre(int identifiant) throws MalformedURLException, IOException {
-
-        String titre = null;
-
-        try {
-            // url de la page du joueur
-            // obligé de mettre un nom de base (ici LJ) mais pas d'impact sur les infos récupérées
-            URL url = new URL("https://basketball.realgm.com/player/LeBron-James/Bests/" + identifiant + "/NBA");
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-
-            String ligne;
-            while ((ligne = br.readLine()) != null && titre == null) {
-
-                // récupération du titre de la page pour avoir le nom du joueur
-                if (ligne.startsWith("<title>")) {
-                    titre = ligne;
-                }
-            }
-
-        } catch (MalformedURLException e) {
-            throw e;
-        } catch (IOException e) {
-            throw e;
-        }
-
-        // récupération du titre sans la balise <title>
-        Document docTitre = Jsoup.parse(titre);
-        Element linkTitre = docTitre.select("title").first();
-     
-        return linkTitre.text();
-    }
-
+    private String titreRealGM;
+    
     /**
-     * Méthode permettant de récupérer le contenu utile (les infos
-     * sur les records) via le code source de la page
-     *
-     * @param identifiant = l'identifiant REALGM du joueur
-     * @return le texte présent dans les balises <td> 
-     * @throws RealGMException
+     * Titre de la page web ESPN pour récupérer le nom du joueur
      */
-    public String recuperationContenuRealGM(int identifiant) throws RealGMException, NoPlayerRealGMException {
-
-        String contenu = "";
-
-        try {
-            // url de la page du joueur
-            // obligé de mettre un nom de base (ici LJ) mais pas d'impact sur les infos récupérées
-            URL url = new URL("https://basketball.realgm.com/player/LeBron-James/Bests/" + identifiant + "/NBA");
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuilder contenuBrut = new StringBuilder();
-
-            // booleen permettant de garder que le contenu désiré
-            boolean contenuValide = false;
-
-            String ligne;
-            while ((ligne = br.readLine()) != null) {
-
-                if (ligne.contains("err404")) {
-                    throw new NoPlayerRealGMException();
-                }
-                
-                // on détermine des "balises" pour ne récupérer que le contenu utile
-                if (ligne.equals("<h2>NBA Regular Season Career Highs</h2>")) {
-                    contenuValide = true;
-                } else if (ligne.startsWith("<p class=\"footnote\">")) {
-                    contenuValide = false;
-                }
-
-                // si le contenu est compris entre les deux balises délimitées,
-                // on l'ajoute au SB
-                if (contenuValide) {
-                    contenuBrut.append(ligne);
-                    contenuBrut.append(System.lineSeparator());
-                }                            
-            }
-
-            // récupération du contenu du SB (le code HTML utile) pour le traiter avec jsoup
-            String html = contenuBrut.toString();
-            Document document = Jsoup.parse(html);
-
-            // récupération du nombre d'éléments <td> présents
-            int size = document.select("td").size();
-
-            StringBuilder contenuTraite = new StringBuilder(); // SB contenant le contenu sans balise HTML (càd le texte)
-
-            int i = 0;
-            while (i < size) {
-                // récupération des éléments <td>
-                Element link = document.select("td").get(i);
-
-                // ajout de l'élément <td> sans balise HTML au SB
-                contenuTraite.append(link.text()).append("\n");
-
-                i++;
-            }
-            
-            // à améliorer : gérer le cas où un record est manquant et le remplacer par - || - || -
-            if (i < 32) {
-                throw new RealGMException();
-            }
-            
-            contenu = contenuTraite.toString();
-
-        } catch (MalformedURLException e) {
-            System.err.println("Erreur : " + e);
-        } catch (IOException e) {
-            System.err.println("Erreur : " + e);
-        }
-
-        return contenu;
-    }
-
+    private String titreESPN;
+   
     /**
-     * Méthode permettant de traiter le contenu pour obtenir chaque information 
-     * sur le record séparément (valeur, adversaire, date)
-     * 
-     * @param contenu
-     * @return une liste contenant tous les records
-     * @throws java.text.ParseException
+     * Récupère le contenu des deux tableaux contenant les records
+     * depuis le code source de la page du joueur
+     * @param identifiant - l'identifiant RealGM du joueur
+     * @return un tableau contenant deux String, une pour les records en saison régulière (SR) et une pour ceux en playoffs (PL)
+     * @throws RealGMException 
      */
-    public ArrayList<Record> traitementContenu(String contenu) throws ParseException {
-        ArrayList<Record> listeRecords = new ArrayList();
+    private String[] recuperationContenuRealGM(int identifiant) throws RealGMException {
+        String recordSR = "";
+        String recordPL = "";
         
-        // on sépare notre texte pour le traiter ligne par ligne
-        String[] lignes = contenu.split("\n");
+        try {
+            Document document = Jsoup.connect("https://basketball.realgm.com/player/wd/Bests/" + identifiant + "/NBA").get();
 
-        // pour chaque ligne du texte
-        for (int i = 0; i < lignes.length; ++i) {
-            String ligne = lignes[i];
+            // récupération du titre de la page
+            titreRealGM = document.title();
 
-            // si le record existe
-            if (!ligne.startsWith("-")) {
+            // la classe "basketball stack force-table" est présente 2 fois dans le code source
+            // première fois pour les records en saison régulière
+            // deuxième fois pour les records en playoffs
+            recordSR = document.getElementsByClass("basketball stack force-table").first().text();
+            recordPL = document.getElementsByClass("basketball stack force-table").last().text();
+            
+            // l'identifiant correspond à un joueur mais celui n'a jamais joué en NBA
+            if(recordSR.isBlank()) throw new RealGMException("never played in NBA");
                 
-                // on sépare les mots pour récupérer ceux qui nous intéressent
-                String[] ligneSeparee = ligne.split(" ");
-
-                // la date correspond au dernier mot de chaque ligne
-                String date = ligneSeparee[ligneSeparee.length - 1];
-                // on transforme la date dans le format souhaité
-                String dateEnFrancais = transformerDate(date);
-
-                // la valeur du record correspond au premier mot
-                String valeur = ligneSeparee[0];
-
-                String adversaire;
-
-                // si la ligne contient "times", cela signifie que le record 
-                // a été effectué plusieurs fois. Cependant, on ne peut récupérer
-                // les infos que sur la dernière fois qu'il a été fait.
-                // On se contente donc de dire qu'il a été fait plusieurs fois
-                
-                if (!ligne.contains("times")) {
-                    // s'il n'y a pas "times", l'adversaire correspond au 3e mot
-                    // s'il y a un '@', on le rajoute devant l'adversaire (match à l'extérieur)
-                  
-                    // si le 4e mot n'est pas "on", cela signifie que l'équipe est composée de 2 mots (Trail Blazers)
-                    if (!"on".equals(ligneSeparee[3])) {
-                        if (ligne.contains("@")) {
-                            adversaire = "@ " + transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
-                        } else {
-                            adversaire = transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
-                        }
-
-                    } else { // sinon le nom est juste composé du 3e mot (Mavericks, Clippers, ...)
-                        if (ligne.contains("@")) {
-                            adversaire = "@ " + transformerAdversaire(ligneSeparee[2]);
-                        } else {
-                            adversaire = transformerAdversaire(ligneSeparee[2]);
-                        }
-                    }
-
-                    listeRecords.add(new Record(valeur, adversaire, dateEnFrancais));
-                } else {
-                    
-                    // s'il y a "times", le nombre de fois que le record a été 
-                    // fait correspond au 2e mot auquel on rajoute "fois" et 
-                    // la date est laisée vide
-                    adversaire = ligneSeparee[1] + " fois";
-
-                    listeRecords.add(new Record(valeur, adversaire, ""));
-                }
+        } catch (NullPointerException e) {
+            throw new RealGMException("ID issue"); // l'identifiant ne correspond à aucun joueur
+        } catch (IOException e) {
+            throw new RealGMException();
+        }
+        
+        return new String[] {recordSR, recordPL};
+    }
+    
+    /**
+     * Crée les records à partir du contenu brut de RealGM
+     * @param contenu - le tableau contenant les deux String (records en saison régulière et en playoffs)
+     * @return un tableau contenant deux ArrayList, une avec les records en SR et une avec ceux en PL
+     * @throws ParseException 
+     */
+    private ArrayList[] traitementContenuRealGM(String[] contenu) throws RealGMException {
+        // la dernière info sur un record est sa date, on split donc 
+        // les chaînes récupérées par les dates pour avoir les records séparement
+        // on split également par "-" car c'est la seule info que contient la ligne si le record
+        // n'a jamais été effectué par le joueur (ex: tirs à 3pts pour les pivots)
+        String[] recordsSR = contenu[0].split("(?<=\\d{2}/\\d{2}/\\d{2}) |\\ - ");
+        String[] recordsPL = contenu[1].split("(?<=\\d{2}/\\d{2}/\\d{2}) |\\ - ");
+        
+        // enlève le dernier record (FIC) qui n'est pas affiché sur Wiki
+        recordsSR = Arrays.copyOf(recordsSR, recordsSR.length - 1);
+        recordsPL = Arrays.copyOf(recordsPL, recordsPL.length - 1);
+        
+        ArrayList<Record> listeRecordsSR = new ArrayList<>();
+        ArrayList<Record> listeRecordsPL = new ArrayList<>();
+          
+        for (String s : recordsSR) { 
+            if (s.matches("^.*\\d$")) { // si la ligne se termine par un chiffre
+                // cela signifie qu'il y a une date de record et que le joueur l'a effectué
+                // on récupère donc les différentes informations pour créer le record
+                listeRecordsSR.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
+            } else { // sinon on crée un record vide
+                listeRecordsSR.add(new Record(transformerNom(s), "-", "-", "-"));
+            }
+        }
+        
+        for (String s : recordsPL) {
+            if (s.matches("^.*\\d$")) {
+                listeRecordsPL.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
             } else {
-                listeRecords.add(new Record("-", "-", "-"));
+                listeRecordsPL.add(new Record(transformerNom(s), "-", "-", "-"));
             }
         }
-
-        return listeRecords;
-    }
-
-    /**
-     * Méthode permettant d'écrire le contenu dans un fichier .txt 
-     * au nom du joueur
-     *
-     * @param contenu
-     * @param nom = le nom du joueur
-     */
-    /*private void ecritureDansFichier(String contenu, String nom) {
-
-        byte data[] = contenu.getBytes();
-
-        // on crée ou écrit dans le fichier correspondant au nom du joueur
-        String file = "fichiers/" + nom + ".txt";
         
-        try (OutputStream out = new FileOutputStream(file)) {
-            out.write(data, 0, data.length);
-            
-            System.out.println("Fichier créé avec succès.");
-        } catch (IOException e) {
-            System.err.println("Erreur : " + e);
-        }
-    }
-*/
-    
-    /**
-     * Méthode permettant de récupérer le nom et le prénom du joueur 
-     * à partir du titre de la page RealGM
-     *
-     * @param titre = titre de la page
-     * @return string contenant prénom et nom du joueur
-     */
-    public String recuperationNomJoueurRealGM(String titre) {
-        
-        return titre.substring(0, titre.indexOf(" Career"));
-    }
- 
-  
-    /**
-     * Méthode permettant d'inscrire les records dans le template
-     * 
-     * @param listeRecords
-     * @return le contenu final
-     */
-    public String preparationContenuRecords(ArrayList<Record> listeRecords) throws IOException {
-            
-        String contenuTemplate = "";
-        String contenuFinal = "";
-        
-        // récupération du contenu du template
-        try {
-            File fichier = new File("fichiers/template.txt");
-
-            Scanner sc = new Scanner(fichier);
-            StringBuilder sb = new StringBuilder();
-            
-            while (sc.hasNextLine()) {
-                sb.append(sc.nextLine());
-                sb.append(System.lineSeparator());
+        // il arrive qu'un record soit absent pour un joueur
+        // si c'est le cas, on l'ajoute à la liste
+        for (int i = 0; i < nomsFR.length; ++i) {
+            if (!nomsFR[i].equals(listeRecordsSR.get(i).getNom())) {
+                listeRecordsSR.add(i, new Record(nomsFR[i], "-", "-", "-"));
             }
-            
-            contenuTemplate = sb.toString();
-            
-        } catch (IOException e) {
-            throw e;
+            if (!nomsFR[i].equals(listeRecordsPL.get(i).getNom())) {
+                listeRecordsPL.add(i, new Record(nomsFR[i], "-", "-", "-"));
+            }
         }
         
-        // séparation du texte pour le traiter ligne par ligne
-        String[] lignes = contenuTemplate.split("\n");
+        return new ArrayList[]{listeRecordsSR, listeRecordsPL};
+    }
+
+    /**
+     * Crée le contenu final en mettant en forme les records
+     * @param listes - le tableau contenant deux ArrayList, une avec les records en SR et une avec ceux en PL
+     * @return une chaîne de caractères correspondant au code Wiki des records
+     */
+    private String miseEnFormeContenuRealGM(ArrayList[] listes) {
+        ArrayList<Record> listeRecordsSR = listes[0];
+        ArrayList<Record> listeRecordsPL = listes[1];
         
-        ArrayList<String> elementsPresentsSR = new ArrayList<>(); // saison régulière
-        ArrayList<String> elementsPresentsPL = new ArrayList<>(); // playoffs
+        String contenuRealGM = "";
         
-        // pour chaque ligne du texte
-        for (int i = 0; i < lignes.length; ++i) {
-            String ligne = lignes[i];
-               
-            if (!ligne.startsWith("|-")) {
-                // séparation de la ligne mot par mot
-                String[] ligneSeparee = ligne.split(" ");
+        // contiennent les mêmes records mais dans l'ordre d'affichage sur Wiki
+        ArrayList<Record> listeRecordsSRTriees = new ArrayList<>(); 
+        ArrayList<Record> listeRecordsPLTriees = new ArrayList<>();
+        
+        // l'ordre d'affichage des records n'est pas le même que l'ordre dans lequel on les récupère
+        // ex : Minutes jouées est récupéré en premire mais doit être affiché en dernier 
+        int[] ordreApparation = new int[]{1, 8, 9, 10, 11, 12, 13, 6, 7, 2, 3, 4, 5, 14, 0};
+        for (int i : ordreApparation) {        
+            listeRecordsSRTriees.add(listeRecordsSR.get(i));
+            listeRecordsPLTriees.add(listeRecordsPL.get(i));
+        }
+
+        // on applique les liens internes et les modèles aux records
+        formatageRecords(listeRecordsSRTriees);
+        formatageRecords(listeRecordsPLTriees);
+        
+        for (int i = 0; i < listeRecordsSRTriees.size(); ++i) {
+
+            contenuRealGM += "| " + listeRecordsSRTriees.get(i).getNom() + " || " + listeRecordsSRTriees.get(i).toString();
+            contenuRealGM += "| " + listeRecordsPLTriees.get(i).toString();
+
+            if (i == listeRecordsSRTriees.size() - 1) { // si on est au dernier record, on ferme le modèle avec l'accolade
+                contenuRealGM += "|}\n";
+            } else {
+                contenuRealGM += "|-\n";
+            }
+        }
+        
+        return contenuRealGM;
+    }
+
+    /**
+     * Applique les liens internes et les modèles sur les records
+     * @param listeRecords - une liste contenant les records
+     */
+    private void formatageRecords(ArrayList<Record> listeRecords) {
+        ArrayList<String> adversairesPresents = new ArrayList<>();
+        ArrayList<String> datesPresentes = new ArrayList<>();
+        
+        for (Record r : listeRecords) {
+            
+            String adversaire = r.getAdversaireSansArobase();
+            String date = r.getDate();
+            
+            if (!adversaire.contains("fois") && !adversaire.startsWith("-")) { // le record a été effectué plusieurs fois ou jamais et n'a donc ni adversaire ni date
                 
-                // le record attendu à cette ligne est représenté par un nombre
-                // et correspond au dernier mot de la ligne
-                String index = ligneSeparee[ligneSeparee.length - 1];
-
-                // on récupère l'adversaire et la date pour tester s'ils sont déjà présents dans le tableau
-                try {
-                    String adversaire = listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase();
-                    String date = listeRecords.get(Integer.parseInt(index.trim())).getDate();
-
-                    if (!adversaire.contains("fois") && !adversaire.startsWith("-")) {
-
-                        if (Integer.parseInt(index.trim()) < 16) { // < 16 : records en saison régulière
-
-                            if (!elementsPresentsSR.contains(adversaire)) { // si c'est la première fois que cet adversaire apparait
-                                elementsPresentsSR.add(adversaire); // ajout de l'adveraire aux éléments déjà présents
-
-                                // on transforme l'écriture de l'adversaire pour qu'il apparaisse avec un lien interne [[nom_adversaire]]
-                                listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));
-                            }
-
-                            if (!elementsPresentsSR.contains(date)) { // si c'est la première fois que cette date apparait
-                                elementsPresentsSR.add(date); // ajout de la date aux éléments déjà présents
-
-                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
-
-                            } else { // date déjà présente
-                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
-                            }
-
-                        } else { // >= 16 : records en playoffs
-
-                            if (!elementsPresentsPL.contains(adversaire)) {
-                                elementsPresentsPL.add(adversaire);
-
-                                listeRecords.get(Integer.parseInt(index.trim())).setAdversaire(creerAdversaireAvecLienInterne(listeRecords, index, adversaire));
-                            }
-
-                            if (!elementsPresentsPL.contains(date)) {
-                                elementsPresentsPL.add(date);
-
-                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "|en basket-ball}}");
-
-                            } else {
-                                listeRecords.get(Integer.parseInt(index.trim())).setDate("{{date-|" + listeRecords.get(Integer.parseInt(index.trim())).getDate() + "}}");
-                            }
-                        }
-                    }
-                } catch (IndexOutOfBoundsException e) {
-                    System.err.println("Le contenu de RealGM n'est pas conforme, le fichier n'a pas pu être créé.");
-                    System.exit(0);
+                if (!adversairesPresents.contains(adversaire)) { // si c'est la première apparation de l'adversaire
+                    adversairesPresents.add(adversaire); // on l'ajoute à la liste de ceux présents
+                    
+                    r.setAdversaire(formaterAdversaire(r)); // on lui ajoute le lien interne
                 }
                 
-                // on remplace l'index du record par celui-ci
-                String nouvelleLigne = ligne.replace(index, listeRecords.get(Integer.parseInt(index.trim())).toString());
-
-                lignes[i] = nouvelleLigne; 
+                if (!datesPresentes.contains(date)) { // si c'est la première apparation de la date
+                    datesPresentes.add(date); // on l'ajoute à la liste de celles présentes
+                    
+                    r.setDate("{{date|" + date + "|en basket-ball}}"); // application du modèle
+                } else {
+                    r.setDate("{{date-|" + date + "}}"); // application du modèle pour une date déjà présente
+                }
             }
-            
-            contenuFinal += lignes[i] + "\n";
-        }
-     
-        return contenuFinal;
+        }     
     }
-        
+    
     /**
-     * Méthode permettant de transformer une date au format "03/01/19" en
+     * Retourne le nom du record
+     * @param s - la ligne contenant nom + valeur + adversaire + date
+     * @return le nom du record en français
+     */
+    private String getNomRecord(String s) {
+        // pour récupérer le nom, on split la ligne par la première valeur numérique
+        // car le nom est à gauche de la valeur du record      
+        Matcher matcher = Pattern.compile("\\d+").matcher(s);
+
+        matcher.find(1); // find(1) pour éviter le 3 de 3 Pointers Made et Attempts
+        
+        String nom = s.substring(0, s.indexOf(" " + matcher.group()));
+        
+        // on traduit le nom avant de le retourner
+        return transformerNom(nom);
+    }
+
+    /**
+     * Retourne la valeur du record
+     * @param s - la ligne contenant nom + valeur + adversaire + date
+     * @return la valeur du record
+     */
+    private String getValeurRecord(String s) {
+        // la valeur correspond à la première valeur numérique
+        Matcher matcher = Pattern.compile("\\d+").matcher(s);
+
+        matcher.find(1); // find(1) pour éviter le 3 de 3 Pointers Made et Attempts
+        
+        return matcher.group();
+    }
+    
+    /**
+     * Retourne la date du record
+     * @param s - la ligne contenant nom + valeur + adversaire + date
+     * @return la date du record en français
+     */
+    private String getDateRecord(String s) throws RealGMException {
+        String[] ligneSeparee = s.split(" ");
+
+        // si la ligne contient "times", le record a été fait plusieurs fois
+        // et la date est laissée vide
+        if (!s.contains("times")) {
+            // la date correspond au dernier mot de chaque ligne
+            String date = ligneSeparee[ligneSeparee.length - 1];
+
+            // on formate la date avant de la retourner
+            return transformerDate(date);
+        } else {
+            return "";
+        }
+    }
+    
+    /**
+     * Retourne l'adversaire du record ou le nombre de fois qu'il a été fait
+     * s'il a eu lieu plusieurs fois
+     * @param s - la ligne contenant nom + valeur + adversaire + date
+     * @return l'adversaire du record en français
+     */
+    private String getAdversaireRecord(String s) {
+        // suppression du nom du record dans la lignes
+        Matcher matcher = Pattern.compile("\\d+").matcher(s);
+        matcher.find(1); // find(1) pour éviter le 3 de 3 Pointers Made et Attempts   
+        String ligne = s.substring(matcher.start());
+        
+        String[] ligneSeparee = ligne.split(" ");
+        
+        String adversaire;
+
+        // si la ligne contient "times", cela signifie que le record 
+        // a été effectué plusieurs fois. Cependant, on ne peut récupérer
+        // les infos que sur la dernière fois qu'il a été fait.
+        // On se contente donc de dire qu'il a été fait plusieurs fois
+        
+        if (!ligne.contains("times")) {
+            // s'il n'y a pas "times", l'adversaire correspond au 3e mot
+            // s'il y a un '@', on le rajoute devant l'adversaire (match à l'extérieur)
+
+            // si le 4e mot n'est pas "on", cela signifie que l'équipe est composée de 2 mots (Trail Blazers)
+            if (!"on".equals(ligneSeparee[3])) {
+                if (ligne.contains("@")) {
+                    adversaire = "@ " + transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                } else {
+                    adversaire = transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                }
+
+            } else { // sinon le nom est juste composé du 3e mot (Mavericks, Clippers, ...)
+                if (ligne.contains("@")) {
+                    adversaire = "@ " + transformerAdversaire(ligneSeparee[2]);
+                } else {
+                    adversaire = transformerAdversaire(ligneSeparee[2]);
+                }
+            }
+        } else {
+
+            // s'il y a "times", le nombre de fois que le record a été 
+            // fait correspond au 2e mot auquel on rajoute "fois" et 
+            // la date est laisée vide
+            adversaire = ligneSeparee[1] + " fois";         
+        }
+        
+        return adversaire;
+    }
+
+    /**
+     * Transforme une date au format "03/01/19" en
      * "1 mars 2019"
-     *
+     * 
      * @param dateBrute = la date au format "MM/dd/yy"
      * @return la date en français
      */
-    private String transformerDate(String dateBrute) throws ParseException {
+    private String transformerDate(String dateBrute) throws RealGMException {
         String dateEnFrancais = "";
-
+        
         try {
             // définition du format que l'on souhaite pour la date
             SimpleDateFormat formater = new SimpleDateFormat("d MMMM yyyy");
@@ -392,17 +318,15 @@ public class DataManagement {
 
             // formatage de la date
             dateEnFrancais = formater.format(date);
-
         } catch (ParseException e) {
-            throw e;
+            throw new RealGMException();
         }
 
         return dateEnFrancais;
     }
-    
+
     /**
-     * Méthode permettant de récupérer le nom de l'adversaire dans sa version
-     * longue en français
+     * Retourne le nom de l'adversaire dans sa version longue en français
      * (Amélioration possible avec HashMap)
      * 
      * @param adversaire
@@ -426,45 +350,64 @@ public class DataManagement {
             "Pacers de l'Indiana", "Bucks de Milwaukee", "Hawks d'Atlanta", "Hornets de Charlotte",
             "Heat de Miami", "Magic d'Orlando", "Wizards de Washington"};
         
-        for (int i = 0; i < nomsCourts.length ; ++i) {
+        for (int i = 0; i < nomsCourts.length; ++i) {
             if (adversaire.equals(nomsCourts[i])) {
                 adversaire = nomsLongs[i];
+                break;
             }
         }
 
         return adversaire;
     }
-
+    
+    private String[] nomsFR = new String[]{"Minutes jouées", "Points", "Rebonds totaux",
+            "Passes décisives", "Interceptions", "Contres", "Rebonds offensifs",
+            "Rebonds défensifs", "Paniers marqués", "Paniers tentés", "Paniers à 3 points réussis",
+            "Paniers à 3 points tentés", "Lancers francs réussis", "Lancers francs tentés", "Balles perdues"};
+    
     /**
-     * Méthode permettant de transformer l'écriture d'un adversaire en brut 
-     * en écriture avec un lien interne 
-     * Cas général : (@) [[nom_adversaire]]
-     * 
-     * @param listeRecords
-     * @param index
-     * @param adversaire
-     * @return (@) [[nom_adversaire]] ou (@) [[Hornets de Charlotte (NBA)|Hornets de Charlotte]]
+     * Traduit le nom d'un record
+     * @param nom - le nom du record en anglais
+     * @return le nom en français
      */
-    private String creerAdversaireAvecLienInterne(ArrayList<Record> listeRecords, String index, String adversaire) {
+    private String transformerNom(String nom) {
 
-        if (listeRecords.get(Integer.parseInt(index.trim())).getAdversaire().contains("@")) { // si c'est à l'extérieur, on met l'@
+        String[] nomsEN = new String[]{"Minutes Played", "Points", "Rebounds",
+            "Assists", "Steals", "Blocks", "Offensive Rebounds", "Defensive Rebounds",
+            "Field Goals Made", "Field Goal Attempts", "3 Pointers Made", "3 Point Attempts",
+            "Free Throws Made", "Free Throw Attempts", "Turnovers"};
 
-            if (adversaire.equals("Hornets de Charlotte")) { // cas particulier
-                return "@ [[Hornets de Charlotte (NBA)|Hornets de Charlotte]]";
-            } else {
-                return "@ [[" + listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase() + "]]";
-            }
-
-        } else {
-
-            if (adversaire.equals("Hornets de Charlotte")) { // cas particulier
-                return "[[Hornets de Charlotte (NBA)|Hornets de Charlotte]]";
-            } else {
-                return "[[" + listeRecords.get(Integer.parseInt(index.trim())).getAdversaireSansArobase() + "]]";
+        for (int i = 0; i < nomsEN.length; ++i) {
+            if (nom.equals(nomsEN[i])) {
+                nom = nomsFR[i];
+                break;
             }
         }
+        
+        return nom;
     }
 
+    /**
+     * Applique le lien interne sur l'adversaire
+     * @param r - le record à formater
+     * @return l'adversaire formaté
+     */
+    private String formaterAdversaire(Record r) {
+        
+        String res = "[[" + r.getAdversaireSansArobase() + "]]"; // cas général
+        
+        // le lien interne pour les Hornets est particulier (gestion de de l'homonymie)
+        if ("Hornets de Charlotte".equals(r.getAdversaireSansArobase())) {
+            res = "[[Hornets de Charlotte (NBA)|Hornets de Charlotte]]";
+        } 
+        
+        if (r.getAdversaire().charAt(0) == '@') {
+            return "@ " + res;
+        } else {
+            return res;
+        }
+    }
+ 
     /**
      * Récupération du nombre de double-double et triple-double en saison
      * régulière et en playoffs sur espn.com
@@ -474,7 +417,7 @@ public class DataManagement {
      * @throws recordsnbawiki.utils.NoPlayerESPNException 
      * @throws java.io.IOException 
      */
-    public String[] recuperationContenuESPN(int identifiant) throws NoPlayerESPNException, IOException {
+    private String[] recuperationContenuESPN(int identifiant) throws ESPNException {
 
         String DD2_SR = "0";
         String TD3_SR = "0";
@@ -483,15 +426,18 @@ public class DataManagement {
         try {
             Document document = Jsoup.connect("https://www.espn.com/nba/player/stats/_/id/" + identifiant).get();
             
+            // récupération du titre de la page
+            titreESPN = document.title();
+            
             // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
             DD2_SR = document.select("span.fw-bold").get(36).text();
             // le nombre de triple-double en saison régulière correspond au 37e élément <span class="fw-bold">
             TD3_SR = document.select("span.fw-bold").get(37).text();
-            
+                            
         } catch (HttpStatusException e) {
-            throw new NoPlayerESPNException();
+            throw new ESPNException("ID issue");
         } catch (IOException e) {
-            throw e;
+            throw new ESPNException();
         }
 
         String DD2_PL = "0";
@@ -514,9 +460,9 @@ public class DataManagement {
             }
             
         } catch (HttpStatusException e) {
-            throw new NoPlayerESPNException();
+            throw new ESPNException("ID issue");
         } catch (IOException e) {
-            throw e;
+            throw new ESPNException();
         }
               
         return new String[]{DD2_SR, TD3_SR, DD2_PL, TD3_PL};
@@ -528,7 +474,7 @@ public class DataManagement {
      * @param valeurs
      * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
      */
-    public String preparationContenuDD2_TD3(String[] valeurs) throws ESPNException {
+    private String miseEnFormeContenuESPN(String[] valeurs) throws ESPNException {
         
         int nbDD2_SR;
         int nbTD3_SR;
@@ -562,11 +508,11 @@ public class DataManagement {
             throw new ESPNException();
         }
 
-        return "|}\n" + ligne_DD2 + "\n" + ligne_TD3 + recuperationDateDuJour();
+        return ligne_DD2 + "\n" + ligne_TD3 + recuperationDateDuJour();
     }
     
     /**
-     * Méthode retournant la date du jour au bon format
+     * Retourne la date du jour au bon format
      * 
      * @return la date du jour
      */
@@ -579,11 +525,42 @@ public class DataManagement {
         return "\n''Dernière mise à jour : {{date-|" + formatter.format(date) + "}}''";
     }
 
+    /**
+     * Méthode permettant de récupérer le nom et le prénom du joueur 
+     * à partir du titre de la page RealGM
+     *
+     * @return string contenant prénom et nom du joueur
+     */
+    public String recuperationNomJoueurRealGM() {
+        // le nom du joueur correspond à la partie gauche avant "Career"
+        return titreRealGM.substring(0, titreRealGM.indexOf(" Career"));
+    }
+    
+    public String recuperationNomJoueurESPN() {
+        // le nom du joueur correspond à la partie gauche avant "Stats"
+        return titreESPN.substring(0, titreESPN.indexOf(" Stats"));
+    }
+    
+    public String getRealGMContent(int identifiantRealGM) throws RealGMException {
+        String[] contenuBrutRealGM = recuperationContenuRealGM(identifiantRealGM);
+        ArrayList[] listesRecords = traitementContenuRealGM(contenuBrutRealGM);
+        String contenuFinalRealGM = miseEnFormeContenuRealGM(listesRecords);
+        
+        return contenuFinalRealGM;
+    }
+    
+    public String getESPNContent(int identifiantESPN) throws ESPNException {
+        String[] contenuBrutESPN = recuperationContenuESPN(identifiantESPN);
+        String contenuFinalESPN = miseEnFormeContenuESPN(contenuBrutESPN);
+        
+        return contenuFinalESPN;
+    }
+    
     public String getFinalContent() {
-        return finalContent;
+        return contenuFinal;
     }
 
     public void setFinalContent(String finalContent) {
-        this.finalContent = finalContent;
+        this.contenuFinal = finalContent;
     }
 }
