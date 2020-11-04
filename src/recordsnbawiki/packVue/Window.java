@@ -8,11 +8,14 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 import static org.jsoup.internal.StringUtil.isNumeric;
 import recordsnbawiki.packLogic.Controller;
 import recordsnbawiki.packLogic.DataManagement;
+import recordsnbawiki.utils.ESPNException;
+import recordsnbawiki.utils.RealGMException;
 
 /**
  *
@@ -100,7 +103,24 @@ public class Window extends JFrame implements Observer {
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
+            case "names incompatibility":
+                displayWarningMessage();
+                break;
         }
+    }
+
+    /**
+     * Display a warning message when the two recovered names are not identical
+     */
+    private void displayWarningMessage() {
+        String message = "Il se peut que les identifiants n'appartiennent pas au même joueur.\n\n"
+                + "Joueur récupéré sur RealGM : "
+                + dataManagement.recuperationNomJoueurRealGM()
+                + "\nJoueur récupéré sur ESPN : "
+                + dataManagement.recuperationNomJoueurESPN()
+                + "\n\nAssurez-vous qu'il s'agit du même joueur avant de publier le contenu sur Wikipédia.";
+
+        JOptionPane.showMessageDialog(null, message, "Erreur potentielle", JOptionPane.WARNING_MESSAGE);
     }
 
     /**
@@ -138,7 +158,7 @@ public class Window extends JFrame implements Observer {
         disableComponents(true); // on désactive les composants pendant le chargement
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
 
-        new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             public void run() {
                 try {
 
@@ -153,10 +173,11 @@ public class Window extends JFrame implements Observer {
                     setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     stop = false;
 
-                } catch (Exception e) {
+                } catch (ESPNException | RealGMException e) {
                 }
             }
-        }).start();
+        });
+        thread.start();
     }
 
     /**

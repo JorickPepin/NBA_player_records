@@ -50,6 +50,10 @@ public class Controller implements Observable {
                 final_content = RealGM_content + ESPN_content;
             }
 
+            if (!namesAreCompatible()) { // display warning message if the two names are not identical
+                notifyObservateurs("names incompatibility");
+            }
+            
             dataManagement.setFinalContent(final_content);
 
         } catch (RealGMException e) {
@@ -69,6 +73,33 @@ public class Controller implements Observable {
         }
     }
 
+    /**
+     * Tests if the two recovered names are identical
+     * @return true if the two names are identical, false otherwise
+     */
+    private boolean namesAreCompatible() {
+     
+        String RealGM_name = dataManagement.recuperationNomJoueurRealGM();
+        String ESPN_name = dataManagement.recuperationNomJoueurESPN();
+        
+        String RealGM_name_formatted = "";
+        String ESPN_name_formatted = "";
+        
+        for (char c : RealGM_name.toCharArray()) {
+            if (Character.isLetter(c) || c == ' ') { // keep only letters and spaces to test without punctuation
+                RealGM_name_formatted += c;
+            }
+        }
+        
+        for (char c : ESPN_name.toCharArray()) {
+            if (Character.isLetter(c) || c == ' ') {
+                ESPN_name_formatted += c;
+            }
+        }
+          
+        return RealGM_name_formatted.equalsIgnoreCase(ESPN_name_formatted);
+    }
+    
     @Override
     public void notifyObservateurs(String code) {
         for (Observer obs : observateurs) {
