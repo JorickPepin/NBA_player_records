@@ -1,6 +1,5 @@
 package recordsnbawiki.packLogic;
 
-import java.util.Scanner;
 import recordsnbawiki.packVue.Window;
 
 /**

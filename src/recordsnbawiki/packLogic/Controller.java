@@ -11,33 +11,47 @@ import recordsnbawiki.utils.RealGMException;
  */
 public class Controller implements Observable {
 
+    /**
+     * Observer list
+     */
     private ArrayList<Observer> observateurs;
-    
+
+    /**
+     * Model
+     */
     private DataManagement dataManagement;
-    
+
     public Controller(DataManagement dataManagement) {
         this.observateurs = new ArrayList<>();
         this.dataManagement = dataManagement;
-    }     
- 
+    }
+
     /**
-     * Génère le fichier texte contenant les records à partir de l'identifiant 
-     * RealGM et ESPN du joueur
-     * 
-     * @param identifiantRealGM - l'identifiant RealGM du joueur
-     * @param identifiantESPN - l'identifiant ESPN du joueur
+     * Generates content from the player's RealGM and ESPN identifier
+     *
+     * @param RealGM_id - the player's RealGM identifier
+     * @param ESPN_id - the player's ESPN identifier
+     * @param header - true if the header is needed, false otherwise
      * @throws RealGMException
      * @throws ESPNException
      */
-    public void generateContent(int identifiantRealGM, int identifiantESPN) throws ESPNException, RealGMException {
-   
-        try {
-            String contenuFinalRealGM = dataManagement.getRealGMContent(identifiantRealGM);
-            String contenuFinalESPN = dataManagement.getESPNContent(identifiantESPN);
+    public void generateContent(int RealGM_id, int ESPN_id, boolean header) throws ESPNException, RealGMException {
 
-            String contenuFinal = contenuFinalRealGM + contenuFinalESPN;
-            dataManagement.setFinalContent(contenuFinal);
-            
+        try {
+
+            String RealGM_content = dataManagement.getRealGMContent(RealGM_id);
+            String ESPN_content = dataManagement.getESPNContent(ESPN_id);
+            String final_content;
+
+            if (header) { // true signifie que l'en-tête doit être ajoutée
+                String contenuEnTete = dataManagement.getHeader();
+                final_content = contenuEnTete + RealGM_content + ESPN_content;
+            } else {
+                final_content = RealGM_content + ESPN_content;
+            }
+
+            dataManagement.setFinalContent(final_content);
+
         } catch (RealGMException e) {
             if ("ID issue".equals(e.getMessage())) {
                 notifyObservateurs("errorNoPlayerRealGM");
@@ -54,7 +68,7 @@ public class Controller implements Observable {
             }
         }
     }
-    
+
     @Override
     public void notifyObservateurs(String code) {
         for (Observer obs : observateurs) {
@@ -65,9 +79,5 @@ public class Controller implements Observable {
     @Override
     public void addObservateur(Observer obs) {
         observateurs.add(obs);
-    }
-
-    public void setDataManagement(DataManagement dataManagement) {
-        this.dataManagement = dataManagement;
     }
 }

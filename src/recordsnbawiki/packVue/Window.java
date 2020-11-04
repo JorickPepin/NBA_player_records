@@ -20,28 +20,34 @@ import recordsnbawiki.packLogic.DataManagement;
  */
 public class Window extends JFrame implements Observer {
 
+    /**
+     * Controller
+     */
     private Controller controller;
-    
+
+    /**
+     * Model
+     */
     private DataManagement dataManagement;
-    
+
     /**
      * Creates new form Window
      */
     public Window() {
         initComponents();
-        
+
         this.dataManagement = new DataManagement();
         this.controller = new Controller(dataManagement);
-        
+
         this.controller.addObservateur(this);
-        
+
         this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 
     @Override
     public void update(String code) {
-        
+
         switch (code) {
             case "fieldsNotFilled":
                 label_alert.setText("Tous les champs ne sont pas remplis.");
@@ -60,9 +66,11 @@ public class Window extends JFrame implements Observer {
                 String text = "Contenu copié dans le presse-papier.";
                 label_alert.setText(text);
                 label_alert.setForeground(Color.BLACK);
-                
+
                 Timer t = new Timer(3000, (ActionEvent e) -> {
-                    if (text.equals(label_alert.getText())) label_alert.setText(null);
+                    if (text.equals(label_alert.getText())) {
+                        label_alert.setText(null);
+                    }
                 });
                 t.setRepeats(false);
                 t.start();
@@ -78,12 +86,12 @@ public class Window extends JFrame implements Observer {
                 stop = true;
                 break;
             case "errorNoPlayerRealGM":
-                label_alert.setText("L'identifiant RealGM ne correspond à aucun joueur.");
+                label_alert.setText("L'ID RealGM ne correspond à aucun joueur.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
             case "errorNoPlayerESPN":
-                label_alert.setText("L'identifiant ESPN ne correspond à aucun joueur.");
+                label_alert.setText("L'ID ESPN ne correspond à aucun joueur.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
@@ -95,51 +103,62 @@ public class Window extends JFrame implements Observer {
         }
     }
 
+    /**
+     * Clean the textArea and init fields border
+     */
     private void resetComponents() {
         textField_RealGM.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         textField_ESPN.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         textArea_content.setText(""); // clear the textArea
     }
 
+    /**
+     * Disable or able all components
+     *
+     * @param value - true to disable, false otherwise
+     */
     private void disableComponents(boolean value) {
         button_submit.setEnabled(!value);
         button_copy.setEnabled(!value);
         textField_RealGM.setEnabled(!value);
         textField_ESPN.setEnabled(!value);
         textArea_content.setEnabled(!value);
+        checkBox_header.setEnabled(!value);
     }
-    
+
     /**
      * Add the content to the textArea
+     *
      * @param RealGM_id
-     * @param ESPN_id 
+     * @param ESPN_id
      */
     private void addContentToTextArea(int RealGM_id, int ESPN_id) {
         controller.notifyObservateurs("loading");
-    
-        disableComponents(true);
+
+        disableComponents(true); // on désactive les composants pendant le chargement
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
-        
+
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    
-                    controller.generateContent(RealGM_id, ESPN_id); 
-                     
+
+                    controller.generateContent(RealGM_id, ESPN_id, checkBox_header.isSelected());
+
                     if (!stop) {
                         textArea_content.setText(dataManagement.getFinalContent());
                         controller.notifyObservateurs("copyContent");
                     }
-                    
+
                     disableComponents(false);
                     setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     stop = false;
-                    
-                } catch (Exception e) {}
+
+                } catch (Exception e) {
+                }
             }
-        }).start();     
+        }).start();
     }
-    
+
     /**
      * Add the content to the clipboard
      */
@@ -148,10 +167,11 @@ public class Window extends JFrame implements Observer {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
     }
-    
+
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPopupMenu1 = new javax.swing.JPopupMenu();
         panel1 = new java.awt.Panel();
         textField_RealGM = new javax.swing.JTextField();
         textField_ESPN = new javax.swing.JTextField();
@@ -162,6 +182,7 @@ public class Window extends JFrame implements Observer {
         textArea_content = new javax.swing.JTextArea();
         label_alert = new javax.swing.JLabel();
         button_copy = new javax.swing.JButton();
+        checkBox_header = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Records joueur NBA");
@@ -240,6 +261,12 @@ public class Window extends JFrame implements Observer {
             }
         });
 
+        checkBox_header.setSelected(true);
+        checkBox_header.setText("En-tête");
+        checkBox_header.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        checkBox_header.setFocusPainted(false);
+        checkBox_header.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -248,16 +275,17 @@ public class Window extends JFrame implements Observer {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(button_copy)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addGap(100, 100, 100)
-                                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGroup(layout.createSequentialGroup()
                             .addGap(50, 50, 50)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createSequentialGroup()
+                            .addGap(100, 100, 100)
+                            .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createSequentialGroup()
+                            .addGap(46, 46, 46)
+                            .addComponent(checkBox_header)
+                            .addGap(12, 12, 12)
+                            .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(50, 50, 50))
         );
         layout.setVerticalGroup(
@@ -265,13 +293,15 @@ public class Window extends JFrame implements Observer {
             .addGroup(layout.createSequentialGroup()
                 .addGap(20, 20, 20)
                 .addComponent(panel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(6, 6, 6)
-                .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(8, 8, 8)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(label_alert, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkBox_header))
+                .addGap(2, 2, 2)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(button_copy)
-                .addContainerGap())
+                .addGap(13, 13, 13))
         );
 
         pack();
@@ -289,7 +319,7 @@ public class Window extends JFrame implements Observer {
 
         if (textField_RealGM.getText().length() > 0) {
             RealGM_id = textField_RealGM.getText();
-        } else {
+        } else { // le field est vide
             textField_RealGM.setBorder(redBorder);
             entriesAreValid = false;
         }
@@ -301,15 +331,15 @@ public class Window extends JFrame implements Observer {
             entriesAreValid = false;
         }
 
-        if (entriesAreValid) {
-            if(!isNumeric(RealGM_id)) {
+        if (entriesAreValid) { // si les deux fields sont complétés
+            if (!isNumeric(RealGM_id)) { // le contenu du field n'est pas un entier
                 textField_RealGM.setBorder(redBorder);
             }
             if (!isNumeric(ESPN_id)) {
                 textField_ESPN.setBorder(redBorder);
             }
 
-            if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) {
+            if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) { // les deux entrées sont des int, on lance le chargement et l'affichage du contenu
                 addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
             } else {
                 controller.notifyObservateurs("invalidEntry");
@@ -324,11 +354,16 @@ public class Window extends JFrame implements Observer {
         controller.notifyObservateurs("copyContent");
     }//GEN-LAST:event_button_copyActionPerformed
 
+    /**
+     * Allows to stop the execution when an exception is thrown
+     */
     private boolean stop = false;
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton button_copy;
     private javax.swing.JButton button_submit;
+    private javax.swing.JCheckBox checkBox_header;
+    private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel label_ESPN;
     private javax.swing.JLabel label_RealGM;
