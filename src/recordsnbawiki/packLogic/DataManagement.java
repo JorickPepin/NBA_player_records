@@ -44,6 +44,12 @@ public class DataManagement {
     private String URL_ESPN;
 
     /**
+     * Permet de savoir si le joueur a au moins un record en playoffs
+     * afin de ne pas les afficher s'il n'en a pas 
+     */
+    private boolean aDesRecordsEnPlayoffs = false;
+    
+    /**
      * Récupère le contenu des deux tableaux contenant les records depuis le
      * code source de la page du joueur
      *
@@ -117,10 +123,11 @@ public class DataManagement {
                 listeRecordsSR.add(new Record(transformerNom(s), "-", "-", "-"));
             }
         }
-
+      
         for (String s : recordsPL) {
             if (s.matches("^.*\\d$")) {
                 listeRecordsPL.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
+                aDesRecordsEnPlayoffs = true; // le joueur a au moins un record en playoffs
             } else {
                 listeRecordsPL.add(new Record(transformerNom(s), "-", "-", "-"));
             }
@@ -172,7 +179,9 @@ public class DataManagement {
         for (int i = 0; i < listeRecordsSRTriees.size(); ++i) {
 
             contenuRealGM += "| " + listeRecordsSRTriees.get(i).getNom() + " || " + listeRecordsSRTriees.get(i).toString();
-            contenuRealGM += "| " + listeRecordsPLTriees.get(i).toString();
+            if (aDesRecordsEnPlayoffs) { // le joueur a au moins un record en playoffs donc on les affiche
+                contenuRealGM += "| " + listeRecordsPLTriees.get(i).toString();
+            }
 
             if (i == listeRecordsSRTriees.size() - 1) { // si on est au dernier record, on ferme le modèle avec l'accolade
                 contenuRealGM += "|}\n";
@@ -560,7 +569,9 @@ public class DataManagement {
      * @return l'en-tête
      */
     public String getHeader() {
-        String template = "== Records sur une rencontre en NBA ==\n"
+        String template;
+        if (aDesRecordsEnPlayoffs) {
+            template = "== Records sur une rencontre en NBA ==\n"
                 + "Les records personnels PLAYER_NAME en [[National Basketball Association|NBA]] sont les suivants<ref>{{Lien web |titre=TITLE_REALGM |url=URL_REALGM |langue=en |site=basketball.realgm.com}}</ref>{{,}}<ref>{{Lien web |titre=TITLE_ESPN |url=URL_ESPN |langue=en |site=espn.com}}</ref> :\n"
                 + "\n"
                 + "{| class=\"wikitable\" style=\"font-size: 95%; text-align:center;\"\n"
@@ -577,7 +588,22 @@ public class DataManagement {
                 + "! scope=\"col\"| Adversaire\n"
                 + "! scope=\"col\"| Date\n"
                 + "|-\n";
-
+        } else {
+            template = "== Records sur une rencontre en NBA ==\n"
+                + "Les records personnels PLAYER_NAME en [[National Basketball Association|NBA]] sont les suivants<ref>{{Lien web |titre=TITLE_REALGM |url=URL_REALGM |langue=en |site=basketball.realgm.com}}</ref>{{,}}<ref>{{Lien web |titre=TITLE_ESPN |url=URL_ESPN |langue=en |site=espn.com}}</ref> :\n"
+                + "\n"
+                + "{| class=\"wikitable\" style=\"font-size: 95%; text-align:center;\"\n"
+                + "|+  class=\"hidden\" | Records personnels PLAYER_NAME\n"
+                + "|-\n"
+                + "! scope=\"col\" rowspan=\"2\"| Type de statistique\n"
+                + "! scope=\"col\" colspan=\"3\"| Saison régulière\n"
+                + "|-\n"
+                + "! scope=\"col\"| Record\n"
+                + "! scope=\"col\"| Adversaire\n"
+                + "! scope=\"col\"| Date\n"
+                + "|-\n";
+        }
+        
         // remplacement des titres dans les références
         template = template.replace("TITLE_REALGM", recuperationNomJoueurRealGM() + " Career Bests");
         template = template.replace("TITLE_ESPN", recuperationNomJoueurESPN() + " Stats");
