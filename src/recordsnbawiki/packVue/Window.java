@@ -6,6 +6,8 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -38,12 +40,15 @@ public class Window extends JFrame implements Observer {
      */
     public Window() {
         initComponents();
-
+        addListeners();
+        
         this.dataManagement = new DataManagement();
         this.controller = new Controller(dataManagement);
 
-        this.controller.addObservateur(this);
+        //this.getRootPane().setDefaultButton(button_submit);
+        //this.requestFocus();
 
+        this.controller.addObservateur(this);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
@@ -64,7 +69,10 @@ public class Window extends JFrame implements Observer {
                 label_alert.setText("Chargement ...");
                 label_alert.setForeground(Color.BLACK);
                 break;
-            case "copyContent":
+            case "submission":
+                submission();
+                break;
+            case "copy":
                 addContentToClipboard();
                 String text = "Contenu copié dans le presse-papier.";
                 label_alert.setText(text);
@@ -158,7 +166,7 @@ public class Window extends JFrame implements Observer {
         disableComponents(true); // on désactive les composants pendant le chargement
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
 
-        Thread thread = new Thread(new Runnable() {
+        new Thread(new Runnable() {
             public void run() {
                 try {
 
@@ -166,7 +174,7 @@ public class Window extends JFrame implements Observer {
 
                     if (!stop) {
                         textArea_content.setText(dataManagement.getFinalContent());
-                        controller.notifyObservateurs("copyContent");
+                        controller.notifyObservateurs("copy");
                     }
 
                     disableComponents(false);
@@ -176,8 +184,7 @@ public class Window extends JFrame implements Observer {
                 } catch (ESPNException | RealGMException e) {
                 }
             }
-        });
-        thread.start();
+        }).start();
     }
 
     /**
@@ -187,6 +194,51 @@ public class Window extends JFrame implements Observer {
         StringSelection stringSelection = new StringSelection(textArea_content.getText());
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
+    }
+
+    /**
+     * Is launched when the user presses the button
+     */
+    private void submission() {
+        resetComponents();
+
+        String RealGM_id = "";
+        String ESPN_id = "";
+
+        boolean entriesAreValid = true;
+
+        Border redBorder = BorderFactory.createLineBorder(Color.RED, 1);
+
+        if (textField_RealGM.getText().length() > 0) {
+            RealGM_id = textField_RealGM.getText();
+        } else { // le field est vide
+            textField_RealGM.setBorder(redBorder);
+            entriesAreValid = false;
+        }
+
+        if (textField_ESPN.getText().length() > 0) {
+            ESPN_id = textField_ESPN.getText();
+        } else {
+            textField_ESPN.setBorder(redBorder);
+            entriesAreValid = false;
+        }
+
+        if (entriesAreValid) { // si les deux fields sont complétés
+            if (!isNumeric(RealGM_id)) { // le contenu du field n'est pas un entier
+                textField_RealGM.setBorder(redBorder);
+            }
+            if (!isNumeric(ESPN_id)) {
+                textField_ESPN.setBorder(redBorder);
+            }
+
+            if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) { // les deux entrées sont des int, on lance le chargement et l'affichage du contenu
+                addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
+            } else {
+                controller.notifyObservateurs("invalidEntry");
+            }
+        } else {
+            controller.notifyObservateurs("fieldsNotFilled");
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -329,52 +381,33 @@ public class Window extends JFrame implements Observer {
     }// </editor-fold>//GEN-END:initComponents
 
     private void button_submitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_submitActionPerformed
-        resetComponents();
-
-        String RealGM_id = "";
-        String ESPN_id = "";
-
-        boolean entriesAreValid = true;
-
-        Border redBorder = BorderFactory.createLineBorder(Color.RED, 1);
-
-        if (textField_RealGM.getText().length() > 0) {
-            RealGM_id = textField_RealGM.getText();
-        } else { // le field est vide
-            textField_RealGM.setBorder(redBorder);
-            entriesAreValid = false;
-        }
-
-        if (textField_ESPN.getText().length() > 0) {
-            ESPN_id = textField_ESPN.getText();
-        } else {
-            textField_ESPN.setBorder(redBorder);
-            entriesAreValid = false;
-        }
-
-        if (entriesAreValid) { // si les deux fields sont complétés
-            if (!isNumeric(RealGM_id)) { // le contenu du field n'est pas un entier
-                textField_RealGM.setBorder(redBorder);
-            }
-            if (!isNumeric(ESPN_id)) {
-                textField_ESPN.setBorder(redBorder);
-            }
-
-            if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) { // les deux entrées sont des int, on lance le chargement et l'affichage du contenu
-                addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
-            } else {
-                controller.notifyObservateurs("invalidEntry");
-            }
-        } else {
-            controller.notifyObservateurs("fieldsNotFilled");
-        }
-
+        controller.notifyObservateurs("submission");
     }//GEN-LAST:event_button_submitActionPerformed
 
     private void button_copyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_copyActionPerformed
-        controller.notifyObservateurs("copyContent");
+        controller.notifyObservateurs("copy");
     }//GEN-LAST:event_button_copyActionPerformed
 
+    private void addListeners() {
+        button_submit.addKeyListener(new Listener());
+        textField_RealGM.addKeyListener(new Listener());
+        textField_ESPN.addKeyListener(new Listener());
+    }
+    
+    private class Listener implements KeyListener {
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            // user presses enter key
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                controller.notifyObservateurs("submission");
+            }
+        }
+        
+        @Override public void keyTyped(KeyEvent e) {}
+        @Override public void keyReleased(KeyEvent e) {}
+    }
+    
     /**
      * Allows to stop the execution when an exception is thrown
      */
