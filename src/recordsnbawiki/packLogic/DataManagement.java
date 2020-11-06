@@ -372,7 +372,7 @@ public class DataManagement {
             "Trail Blazers", "Jazz", "Warriors", "Clippers", "Lakers", "Suns",
             "Kings", "Mavericks", "Rockets", "Grizzlies", "Pelicans", "Spurs",
             "Celtics", "Nets", "Knicks", "Sixers", "Raptors", "Bulls", "Cavaliers",
-            "Pistons", "Pacers", "Bucks", "Hawks", "Hornets", "Heat", "Magic", "Wizards"};
+            "Pistons", "Pacers", "Bucks", "Hawks", "Hornets", "Heat", "Magic", "Wizards", "SuperSonics"};
 
         String[] nomsLongs = new String[]{"Nuggets de Denver", "Timberwolves du Minnesota",
             "Thunder d'Oklahoma City", "Trail Blazers de Portland", "Jazz de l'Utah",
@@ -382,7 +382,7 @@ public class DataManagement {
             "Celtics de Boston", "Nets de Brooklyn", "Knicks de New York", "76ers de Philadelphie",
             "Raptors de Toronto", "Bulls de Chicago", "Cavaliers de Cleveland", "Pistons de Détroit",
             "Pacers de l'Indiana", "Bucks de Milwaukee", "Hawks d'Atlanta", "Hornets de Charlotte",
-            "Heat de Miami", "Magic d'Orlando", "Wizards de Washington"};
+            "Heat de Miami", "Magic d'Orlando", "Wizards de Washington", "SuperSonics de Seattle"};
 
         for (int i = 0; i < nomsCourts.length; ++i) {
             if (adversaire.equals(nomsCourts[i])) {

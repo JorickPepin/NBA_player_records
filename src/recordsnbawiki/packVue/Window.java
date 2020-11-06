@@ -134,10 +134,15 @@ public class Window extends JFrame implements Observer {
     private void resetComponents() {
         textField_RealGM.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         textField_ESPN.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-        textArea_content.setText(""); // clear the textArea
+        textArea_content.setText(""); // clear the textArea 
     }
 
-    /**
+    private void resetTextFields() {
+        textField_RealGM.setText(""); 
+        textField_ESPN.setText(""); 
+    }
+    
+    /** 
      * Disable or able all components
      *
      * @param value - true to disable, false otherwise
@@ -175,6 +180,7 @@ public class Window extends JFrame implements Observer {
                     }
 
                     disableComponents(false);
+                    resetTextFields();
                     setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     stop = false;
 
