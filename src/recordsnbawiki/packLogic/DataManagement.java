@@ -124,6 +124,7 @@ public class DataManagement {
             }
         }
       
+        aDesRecordsEnPlayoffs = false;
         for (String s : recordsPL) {
             if (s.matches("^.*\\d$")) {
                 listeRecordsPL.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));

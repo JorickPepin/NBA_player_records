@@ -44,10 +44,7 @@ public class Window extends JFrame implements Observer {
         
         this.dataManagement = new DataManagement();
         this.controller = new Controller(dataManagement);
-
-        //this.getRootPane().setDefaultButton(button_submit);
-        //this.requestFocus();
-
+        
         this.controller.addObservateur(this);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
@@ -240,11 +237,10 @@ public class Window extends JFrame implements Observer {
             controller.notifyObservateurs("fieldsNotFilled");
         }
     }
-
+    
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPopupMenu1 = new javax.swing.JPopupMenu();
         panel1 = new java.awt.Panel();
         textField_RealGM = new javax.swing.JTextField();
         textField_ESPN = new javax.swing.JTextField();
@@ -417,7 +413,6 @@ public class Window extends JFrame implements Observer {
     private javax.swing.JButton button_copy;
     private javax.swing.JButton button_submit;
     private javax.swing.JCheckBox checkBox_header;
-    private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel label_ESPN;
     private javax.swing.JLabel label_RealGM;
