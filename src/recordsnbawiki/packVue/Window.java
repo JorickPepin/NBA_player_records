@@ -125,7 +125,7 @@ public class Window extends JFrame implements Observer {
                 + dataManagement.recuperationNomJoueurESPN()
                 + "\n\nAssurez-vous qu'il s'agit du même joueur avant de publier le contenu sur Wikipédia.";
 
-        JOptionPane.showMessageDialog(null, message, "Erreur potentielle", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Erreur potentielle", JOptionPane.WARNING_MESSAGE);
     }
 
     /**
