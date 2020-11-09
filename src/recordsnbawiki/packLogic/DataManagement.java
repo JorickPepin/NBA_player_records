@@ -47,7 +47,7 @@ public class DataManagement {
      * Permet de savoir si le joueur a au moins un record en playoffs
      * afin de ne pas les afficher s'il n'en a pas 
      */
-    private boolean aDesRecordsEnPlayoffs = false;
+    private boolean aDesRecordsEnPlayoffs;
     
     /**
      * Récupère le contenu des deux tableaux contenant les records depuis le
@@ -120,7 +120,7 @@ public class DataManagement {
                 // on récupère donc les différentes informations pour créer le record
                 listeRecordsSR.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
             } else { // sinon on crée un record vide
-                listeRecordsSR.add(new Record(transformerNom(s), "-", "-", "-"));
+                listeRecordsSR.add(new Record(traduireNom(s), "-", "-", "-"));
             }
         }
       
@@ -130,7 +130,7 @@ public class DataManagement {
                 listeRecordsPL.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
                 aDesRecordsEnPlayoffs = true; // le joueur a au moins un record en playoffs
             } else {
-                listeRecordsPL.add(new Record(transformerNom(s), "-", "-", "-"));
+                listeRecordsPL.add(new Record(traduireNom(s), "-", "-", "-"));
             }
         }
 
@@ -243,7 +243,7 @@ public class DataManagement {
         String nom = s.substring(0, s.indexOf(" " + matcher.group()));
 
         // on traduit le nom avant de le retourner
-        return transformerNom(nom);
+        return traduireNom(nom);
     }
 
     /**
@@ -311,16 +311,16 @@ public class DataManagement {
             // si le 4e mot n'est pas "on", cela signifie que l'équipe est composée de 2 mots (Trail Blazers)
             if (!"on".equals(ligneSeparee[3])) {
                 if (ligne.contains("@")) {
-                    adversaire = "@ " + transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                    adversaire = "@ " + traduireAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
                 } else {
-                    adversaire = transformerAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                    adversaire = traduireAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
                 }
 
             } else { // sinon le nom est juste composé du 3e mot (Mavericks, Clippers, ...)
                 if (ligne.contains("@")) {
-                    adversaire = "@ " + transformerAdversaire(ligneSeparee[2]);
+                    adversaire = "@ " + traduireAdversaire(ligneSeparee[2]);
                 } else {
-                    adversaire = transformerAdversaire(ligneSeparee[2]);
+                    adversaire = traduireAdversaire(ligneSeparee[2]);
                 }
             }
         } else {
@@ -366,7 +366,7 @@ public class DataManagement {
      * @param adversaire
      * @return le nom de l'adversaire en français
      */
-    private String transformerAdversaire(String adversaire) {
+    private String traduireAdversaire(String adversaire) {
 
         String[] nomsCourts = new String[]{"Nuggets", "Timberwolves", "Thunder",
             "Trail Blazers", "Jazz", "Warriors", "Clippers", "Lakers", "Suns",
@@ -405,7 +405,7 @@ public class DataManagement {
      * @param nom - le nom du record en anglais
      * @return le nom en français
      */
-    private String transformerNom(String nom) {
+    private String traduireNom(String nom) {
 
         String[] nomsEN = new String[]{"Minutes Played", "Points", "Rebounds",
             "Assists", "Steals", "Blocks", "Offensive Rebounds", "Defensive Rebounds",

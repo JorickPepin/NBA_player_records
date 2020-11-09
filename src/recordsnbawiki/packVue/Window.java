@@ -12,6 +12,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
+import javax.swing.ToolTipManager;
 import javax.swing.border.Border;
 import static org.jsoup.internal.StringUtil.isNumeric;
 import recordsnbawiki.packLogic.Controller;
@@ -46,8 +47,11 @@ public class Window extends JFrame implements Observer {
         this.controller = new Controller(dataManagement);
         
         this.controller.addObservateur(this);
+        
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+        
+        ToolTipManager.sharedInstance().setEnabled(false);
     }
 
     @Override
@@ -60,6 +64,10 @@ public class Window extends JFrame implements Observer {
                 break;
             case "invalidEntry":
                 label_alert.setText("Les identifiants doivent être des entiers.");
+                label_alert.setForeground(Color.RED);
+                break;
+            case "out of bounds":
+                label_alert.setText("Identifiants hors limites.");
                 label_alert.setForeground(Color.RED);
                 break;
             case "loading":
@@ -177,10 +185,10 @@ public class Window extends JFrame implements Observer {
                     if (!stop) {
                         textArea_content.setText(dataManagement.getFinalContent());
                         controller.notifyObservateurs("copy");
+                        resetTextFields();
                     }
 
                     disableComponents(false);
-                    resetTextFields();
                     setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     stop = false;
 
@@ -213,14 +221,14 @@ public class Window extends JFrame implements Observer {
         Border redBorder = BorderFactory.createLineBorder(Color.RED, 1);
 
         if (textField_RealGM.getText().length() > 0) {
-            RealGM_id = textField_RealGM.getText();
+            RealGM_id = textField_RealGM.getText().replace(" ", ""); // get text without space
         } else { // le field est vide
             textField_RealGM.setBorder(redBorder);
             entriesAreValid = false;
         }
 
         if (textField_ESPN.getText().length() > 0) {
-            ESPN_id = textField_ESPN.getText();
+            ESPN_id = textField_ESPN.getText().replace(" ", "");
         } else {
             textField_ESPN.setBorder(redBorder);
             entriesAreValid = false;
@@ -235,7 +243,15 @@ public class Window extends JFrame implements Observer {
             }
 
             if (isNumeric(RealGM_id) && isNumeric(ESPN_id)) { // les deux entrées sont des int, on lance le chargement et l'affichage du contenu
-                addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));
+                
+                try {
+                    addContentToTextArea(Integer.parseInt(RealGM_id), Integer.parseInt(ESPN_id));  
+                } catch (NumberFormatException e) {
+                    textField_RealGM.setBorder(redBorder);
+                    textField_ESPN.setBorder(redBorder);
+                    controller.notifyObservateurs("out of bounds");
+                }        
+                
             } else {
                 controller.notifyObservateurs("invalidEntry");
             }
