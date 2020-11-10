@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
@@ -113,30 +114,39 @@ public class DataManagement {
 
         ArrayList<Record> listeRecordsSR = new ArrayList<>();
         ArrayList<Record> listeRecordsPL = new ArrayList<>();
-
+       
+        int i;
+        
+        // initialisation des listes avec 15 records vides (15 = nb de records au total)
+        for (i = 0; i < 15; ++i) { listeRecordsSR.add(new Record()); listeRecordsPL.add(new Record()); } 
+      
+        i = 0;
         for (String s : recordsSR) {
             if (s.matches("^.*\\d$")) { // si la ligne se termine par un chiffre
                 // cela signifie qu'il y a une date de record et que le joueur l'a effectué
                 // on récupère donc les différentes informations pour créer le record
-                listeRecordsSR.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
+                listeRecordsSR.set(i, new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
             } else { // sinon on crée un record vide
-                listeRecordsSR.add(new Record(traduireNom(s), "-", "-", "-"));
+                listeRecordsSR.set(i, new Record(traduireNom(s), "-", "-", "-"));
             }
+            i++;
         }
       
+        i = 0;
         aDesRecordsEnPlayoffs = false;
         for (String s : recordsPL) {
             if (s.matches("^.*\\d$")) {
-                listeRecordsPL.add(new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
+                listeRecordsPL.set(i, new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
                 aDesRecordsEnPlayoffs = true; // le joueur a au moins un record en playoffs
             } else {
-                listeRecordsPL.add(new Record(traduireNom(s), "-", "-", "-"));
+                listeRecordsPL.set(i, new Record(traduireNom(s), "-", "-", "-"));
             }
+            i++;
         }
 
         // il arrive qu'un record soit absent pour un joueur
         // si c'est le cas, on l'ajoute à la liste
-        for (int i = 0; i < nomsFR.length; ++i) {
+        for (i = 0; i < nomsFR.length; ++i) {
             if (!nomsFR[i].equals(listeRecordsSR.get(i).getNom())) {
                 listeRecordsSR.add(i, new Record(nomsFR[i], "-", "-", "-"));
             }
@@ -290,7 +300,7 @@ public class DataManagement {
      * @param s - la ligne contenant nom + valeur + adversaire + date
      * @return l'adversaire du record en français
      */
-    private String getAdversaireRecord(String s) {
+    private String getAdversaireRecord(String s) throws RealGMException {
         // suppression du nom du record dans la lignes
         Matcher matcher = Pattern.compile("\\d+").matcher(s);
         matcher.find(1); // find(1) pour éviter le 3 de 3 Pointers Made et Attempts   
@@ -311,16 +321,16 @@ public class DataManagement {
             // si le 4e mot n'est pas "on", cela signifie que l'équipe est composée de 2 mots (Trail Blazers)
             if (!"on".equals(ligneSeparee[3])) {
                 if (ligne.contains("@")) {
-                    adversaire = "@ " + traduireAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                    adversaire = "@ " + traduireAdversaire(ligneSeparee[2] + " " + ligneSeparee[3], getDateRecord(s));
                 } else {
-                    adversaire = traduireAdversaire(ligneSeparee[2] + " " + ligneSeparee[3]);
+                    adversaire = traduireAdversaire(ligneSeparee[2] + " " + ligneSeparee[3], getDateRecord(s));
                 }
 
             } else { // sinon le nom est juste composé du 3e mot (Mavericks, Clippers, ...)
                 if (ligne.contains("@")) {
-                    adversaire = "@ " + traduireAdversaire(ligneSeparee[2]);
+                    adversaire = "@ " + traduireAdversaire(ligneSeparee[2], getDateRecord(s));
                 } else {
-                    adversaire = traduireAdversaire(ligneSeparee[2]);
+                    adversaire = traduireAdversaire(ligneSeparee[2], getDateRecord(s));
                 }
             }
         } else {
@@ -366,13 +376,13 @@ public class DataManagement {
      * @param adversaire
      * @return le nom de l'adversaire en français
      */
-    private String traduireAdversaire(String adversaire) {
-
+    private String traduireAdversaire(String adversaire, String date) throws RealGMException {
+        
         String[] nomsCourts = new String[]{"Nuggets", "Timberwolves", "Thunder",
             "Trail Blazers", "Jazz", "Warriors", "Clippers", "Lakers", "Suns",
             "Kings", "Mavericks", "Rockets", "Grizzlies", "Pelicans", "Spurs",
             "Celtics", "Nets", "Knicks", "Sixers", "Raptors", "Bulls", "Cavaliers",
-            "Pistons", "Pacers", "Bucks", "Hawks", "Hornets", "Heat", "Magic", "Wizards", "SuperSonics"};
+            "Pistons", "Pacers", "Bucks", "Hawks", "Hornets", "Heat", "Magic", "Wizards", "SuperSonics", "Hornets (1988)"};
 
         String[] nomsLongs = new String[]{"Nuggets de Denver", "Timberwolves du Minnesota",
             "Thunder d'Oklahoma City", "Trail Blazers de Portland", "Jazz de l'Utah",
@@ -382,7 +392,7 @@ public class DataManagement {
             "Celtics de Boston", "Nets de Brooklyn", "Knicks de New York", "76ers de Philadelphie",
             "Raptors de Toronto", "Bulls de Chicago", "Cavaliers de Cleveland", "Pistons de Détroit",
             "Pacers de l'Indiana", "Bucks de Milwaukee", "Hawks d'Atlanta", "Hornets de Charlotte",
-            "Heat de Miami", "Magic d'Orlando", "Wizards de Washington", "SuperSonics de Seattle"};
+            "Heat de Miami", "Magic d'Orlando", "Wizards de Washington", "SuperSonics de Seattle", "Hornets de Charlotte"};
 
         for (int i = 0; i < nomsCourts.length; ++i) {
             if (adversaire.equals(nomsCourts[i])) {
@@ -390,8 +400,99 @@ public class DataManagement {
                 break;
             }
         }
+ 
+        Date dateRecord;
+        try {   
+            dateRecord = new SimpleDateFormat("d MMMM yyyy").parse(date);
+        } catch (ParseException e) {
+            throw new RealGMException();
+        }
 
+        // liste des équipes ayant changé de nom après 1990
+        ArrayList<String> franchisesAControler = new ArrayList<>(Arrays.asList(
+                "Hornets de Charlotte", "Nets de Brooklyn", "Grizzlies de Memphis",
+                "Pelicans de La Nouvelle-Orléans", "Wizards de Washington"));
+ 
+        // si l'adversaire fait partie de la liste, on vérifie si le record
+        // a été fait lorsque l'équipe avec un autre nom grâce à la date du record
+        // et change le nom si besoin
+        if (franchisesAControler.contains(adversaire)) {
+            adversaire = renommageFranchise(adversaire, dateRecord);
+        }
+        
         return adversaire;
+    }
+
+    /**
+     * Renomme une franchise en fonction de la date du record si besoin
+     * (prend en compte les changements de nom après 1990)
+     * @param franchise - le nom de la franchise à potentiellement changer
+     * @param dateRecord - la date à laquelle le record a été effectué
+     * @return le nom de la franchise selon la date du record
+     */
+    private String renommageFranchise(String franchise, Date dateRecord) {
+
+        switch (franchise) {
+            case "Hornets de Charlotte":
+                try {
+                    Date dateDebutBobcats = new SimpleDateFormat("d MMMM yyyy").parse("2 novembre 2004");
+                    Date dateFinBobcats = new SimpleDateFormat("d MMMM yyyy").parse("28 octobre 2014");
+
+                    if (dateRecord.before(dateFinBobcats) && dateRecord.after(dateDebutBobcats)) {
+                        franchise = "Bobcats de Charlotte";
+                    }
+
+                } catch (ParseException e) {}
+                break;
+            case "Nets de Brooklyn":
+                try {
+                    Date dateDebutNetsDeBrooklyn = new SimpleDateFormat("d MMMM yyyy").parse("30 octobre 2012");
+
+                    if (dateRecord.before(dateDebutNetsDeBrooklyn)) {
+                        franchise = "Nets du New Jersey";
+                    }
+
+                } catch (ParseException e) {}
+                break;
+            case "Grizzlies de Memphis":
+                try {
+                    Date dateDebutGrizzliesDeMemphis = new SimpleDateFormat("d MMMM yyyy").parse("30 octobre 2001");
+
+                    if (dateRecord.before(dateDebutGrizzliesDeMemphis)) {
+                        franchise = "Grizzlies de Vancouver";
+                    }
+
+                } catch (ParseException e) {}
+                break;
+            case "Pelicans de La Nouvelle-Orléans":
+                try {
+                    Date dateDebutHornetsOklahoma = new SimpleDateFormat("d MMMM yyyy").parse("1 novembre 2005");
+                    Date dateFinHornetsOklahoma = new SimpleDateFormat("d MMMM yyyy").parse("30 octobre 2007");
+                    Date dateDebutPelicans = new SimpleDateFormat("d MMMM yyyy").parse("29 octobre 2013");
+                    
+                    if (dateRecord.before(dateDebutHornetsOklahoma)) {
+                        franchise = "Hornets de La Nouvelle-Orléans";
+                    } else if (dateRecord.before(dateFinHornetsOklahoma)) {
+                        franchise = "Hornets de La Nouvelle-Orléans/Oklahoma City";
+                    } else if (dateRecord.before(dateDebutPelicans)) {
+                        franchise = "Hornets de La Nouvelle-Orléans";
+                    }
+                    
+                } catch (ParseException e) {}
+                break;
+            case "Wizards de Washington":
+                try {
+                    Date dateDebutWizards = new SimpleDateFormat("d MMMM yyyy").parse("31 octobre 1997");
+
+                    if (dateRecord.before(dateDebutWizards)) {
+                        franchise = "Bullets de Washington";
+                    }
+
+                } catch (ParseException e) {}
+                break;
+        }
+        
+        return franchise;
     }
 
     private String[] nomsFR = new String[]{"Minutes jouées", "Points", "Rebonds totaux",
@@ -411,7 +512,7 @@ public class DataManagement {
             "Assists", "Steals", "Blocks", "Offensive Rebounds", "Defensive Rebounds",
             "Field Goals Made", "Field Goal Attempts", "3 Pointers Made", "3 Point Attempts",
             "Free Throws Made", "Free Throw Attempts", "Turnovers"};
-
+    
         for (int i = 0; i < nomsEN.length; ++i) {
             if (nom.equals(nomsEN[i])) {
                 nom = nomsFR[i];

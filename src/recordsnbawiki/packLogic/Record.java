@@ -29,6 +29,10 @@ public class Record {
      */
     private String date;
 
+    public Record() {
+        nom = valeur = adversaire = date = "";
+    }
+    
     public Record(String nom, String valeur, String adversaire, String date) {
         this.nom = nom;
         this.valeur = valeur;
