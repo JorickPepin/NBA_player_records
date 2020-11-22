@@ -1,0 +1,16 @@
+== Records sur une rencontre en NBA ==
+Les records personnels PLAYER_NAME en [[National Basketball Association|NBA]] sont les suivants<ref>{{Lien web |titre=TITLE_REALGM |url=URL_REALGM |langue=en |site=basketball.realgm.com}}</ref>{{,}}<ref>{{Lien web |titre=TITLE_ESPN |url=URL_ESPN |langue=en |site=espn.com}}</ref> :
+{| class="wikitable" style="font-size: 95%; text-align:center;"
+|+  class="hidden" | Records personnels PLAYER_NAME
+|-
+! scope="col" rowspan="2"| Type de statistique
+! scope="col" colspan="3"| Saison régulière
+! scope="col" colspan="3"| Playoffs
+|-
+! scope="col"| Record
+! scope="col"| Adversaire
+! scope="col"| Date
+! scope="col"| Record
+! scope="col"| Adversaire
+! scope="col"| Date
+|-
