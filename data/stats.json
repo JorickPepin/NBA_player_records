@@ -1,0 +1,62 @@
+[
+  {
+    "en": "Minutes Played",
+    "fr": "Minutes jouées"
+  },
+  {
+    "en": "Points",
+    "fr": "Points"
+  },
+  {
+    "en": "Rebounds",
+    "fr": "Rebonds totaux"
+  },
+  {
+    "en": "Assists",
+    "fr": "Passes décisives"
+  },
+  {
+    "en": "Steals",
+    "fr": "Interceptions"
+  },
+  {
+    "en": "Blocks",
+    "fr": "Contres"
+  },
+  {
+    "en": "Offensive Rebounds",
+    "fr": "Rebonds offensifs"
+  },
+  {
+    "en": "Defensive Rebounds",
+    "fr": "Rebonds défensifs"
+  },
+  {
+    "en": "Field Goals Made",
+    "fr": "Paniers marqués"
+  },
+  {
+    "en": "Field Goal Attempts",
+    "fr": "Paniers tentés"
+  },
+  {
+    "en": "3 Pointers Made",
+    "fr": "Paniers à 3 points réussis"
+  },
+  {
+    "en": "3 Point Attempts",
+    "fr": "Paniers à 3 points tentés"
+  },
+  {
+    "en": "Free Throws Made",
+    "fr": "Lancers francs réussis"
+  },
+  {
+    "en": "Free Throw Attempts",
+    "fr": "Lancers francs tentés"
+  },
+  {
+    "en": "Turnovers",
+    "fr": "Balles perdues"
+  }
+]

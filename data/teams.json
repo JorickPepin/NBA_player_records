@@ -1,0 +1,130 @@
+[
+  {
+    "shortName": "Nuggets",
+    "longName": "Nuggets de Denver"
+  },
+  {
+    "shortName": "Timberwolves",
+    "longName": "Timberwolves du Minnesota"
+  },
+  {
+    "shortName": "Thunder",
+    "longName": "Thunder d'Oklahoma City"
+  },
+  {
+    "shortName": "Trail Blazers",
+    "longName": "Trail Blazers de Portland"
+  },
+  {
+    "shortName": "Jazz",
+    "longName": "Jazz de l'Utah"
+  },
+  {
+    "shortName": "Warriors",
+    "longName": "Warriors de Golden State"
+  },
+  {
+    "shortName": "Clippers",
+    "longName": "Clippers de Los Angeles"
+  },
+  {
+    "shortName": "Lakers",
+    "longName": "Lakers de Los Angeles"
+  },
+  {
+    "shortName": "Suns",
+    "longName": "Suns de Phoenix"
+  },
+  {
+    "shortName": "Kings",
+    "longName": "Kings de Sacramento"
+  },
+  {
+    "shortName": "Mavericks",
+    "longName": "Mavericks de Dallas"
+  },
+  {
+    "shortName": "Rockets",
+    "longName": "Rockets de Houston"
+  },
+  {
+    "shortName": "Grizzlies",
+    "longName": "Grizzlies de Memphis"
+  },
+  {
+    "shortName": "Pelicans",
+    "longName": "Pelicans de La Nouvelle-Orléans"
+  },
+  {
+    "shortName": "Spurs",
+    "longName": "Spurs de San Antonio"
+  },
+  {
+    "shortName": "Celtics",
+    "longName": "Celtics de Boston"
+  },
+  {
+    "shortName": "Nets",
+    "longName": "Nets de Brooklyn"
+  },
+  {
+    "shortName": "Knicks",
+    "longName": "Knicks de New York"
+  },
+  {
+    "shortName": "Sixers",
+    "longName": "76ers de Philadelphie"
+  },
+  {
+    "shortName": "Raptors",
+    "longName": "Raptors de Toronto"
+  },
+  {
+    "shortName": "Bulls",
+    "longName": "Bulls de Chicago"
+  },
+  {
+    "shortName": "Cavaliers",
+    "longName": "Cavaliers de Cleveland"
+  },
+  {
+    "shortName": "Pistons",
+    "longName": "Pistons de Détroit"
+  },
+  {
+    "shortName": "Pacers",
+    "longName": "Pacers de l'Indiana"
+  },
+  {
+    "shortName": "Bucks",
+    "longName": "Bucks de Milwaukee"
+  },
+  {
+    "shortName": "Hawks",
+    "longName": "Hawks d'Atlanta"
+  },
+  {
+    "shortName": "Hornets",
+    "longName": "Hornets de Charlotte"
+  },
+  {
+    "shortName": "Hornets (1988)",
+    "longName": "Hornets de Charlotte"
+  },
+  {
+    "shortName": "Heat",
+    "longName": "Heat de Miami"
+  },
+  {
+    "shortName": "Magic",
+    "longName": "Magic d'Orlando"
+  },
+  {
+    "shortName": "Wizards",
+    "longName": "Wizards de Washington"
+  },
+  {
+    "shortName": "SuperSonics",
+    "longName": "SuperSonics de Seattle"
+  }
+]
