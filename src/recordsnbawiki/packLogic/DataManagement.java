@@ -1,12 +1,12 @@
 package recordsnbawiki.packLogic;
 
+import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
@@ -49,6 +49,9 @@ public class DataManagement {
      * afin de ne pas les afficher s'il n'en a pas 
      */
     private boolean aDesRecordsEnPlayoffs;
+    
+    /** Permet d'utiliser les données récupérées dans les fichiers json */
+    private JsonManagement Json;
     
     /**
      * Récupère le contenu des deux tableaux contenant les records depuis le
@@ -144,17 +147,23 @@ public class DataManagement {
             i++;
         }
 
-        // il arrive qu'un record soit absent pour un joueur
-        // si c'est le cas, on l'ajoute à la liste
-        for (i = 0; i < nomsFR.length; ++i) {
-            if (!nomsFR[i].equals(listeRecordsSR.get(i).getNom())) {
-                listeRecordsSR.add(i, new Record(nomsFR[i], "-", "-", "-"));
+        // il arrive qu'un record soit absent pour un joueur (ex: ligne 'paniers à 3pts réussis' pour un pivot)
+        // si c'est le cas, on ajoute un record 'vide' à la place où il devrait être
+        
+        ArrayList<String> nomsFR = new ArrayList<>(); // liste contenant les statistiques en français
+        Json.getStatNames_EN_to_FR().forEach((k, v) -> {
+            nomsFR.add(v);
+        });
+        
+        for (i = 0; i < nomsFR.size(); ++i) {
+            if (!nomsFR.get(i).equals(listeRecordsSR.get(i).getNom())) { // si le record n'est pas celui qui est attendu à cette place
+                listeRecordsSR.add(i, new Record(nomsFR.get(i), "-", "-", "-")); // on ajoute un record vide à sa place et le décale
             }
-            if (!nomsFR[i].equals(listeRecordsPL.get(i).getNom())) {
-                listeRecordsPL.add(i, new Record(nomsFR[i], "-", "-", "-"));
+            if (!nomsFR.get(i).equals(listeRecordsPL.get(i).getNom())) {
+                listeRecordsPL.add(i, new Record(nomsFR.get(i), "-", "-", "-"));
             }
         }
-
+        
         return new ArrayList[]{listeRecordsSR, listeRecordsPL};
     }
 
@@ -213,12 +222,12 @@ public class DataManagement {
         ArrayList<String> adversairesPresents = new ArrayList<>();
         ArrayList<String> datesPresentes = new ArrayList<>();
 
-        for (Record r : listeRecords) {
-
+        listeRecords.forEach(r -> {
             String adversaire = r.getAdversaireSansArobase();
             String date = r.getDate();
-
-            if (!adversaire.contains("fois") && !adversaire.startsWith("-")) { // le record a été effectué plusieurs fois ou jamais et n'a donc ni adversaire ni date
+            
+            // si le record a été effectué plusieurs fois ou jamais, il n'a ni adversaire ni date
+            if (!adversaire.contains("fois") && !adversaire.startsWith("-")) {
 
                 if (!adversairesPresents.contains(adversaire)) { // si c'est la première apparation de l'adversaire
                     adversairesPresents.add(adversaire); // on l'ajoute à la liste de ceux présents
@@ -234,7 +243,7 @@ public class DataManagement {
                     r.setDate("{{date-|" + date + "}}"); // application du modèle pour une date déjà présente
                 }
             }
-        }
+        });
     }
 
     /**
@@ -378,28 +387,7 @@ public class DataManagement {
      */
     private String traduireAdversaire(String adversaire, String date) throws RealGMException {
         
-        String[] nomsCourts = new String[]{"Nuggets", "Timberwolves", "Thunder",
-            "Trail Blazers", "Jazz", "Warriors", "Clippers", "Lakers", "Suns",
-            "Kings", "Mavericks", "Rockets", "Grizzlies", "Pelicans", "Spurs",
-            "Celtics", "Nets", "Knicks", "Sixers", "Raptors", "Bulls", "Cavaliers",
-            "Pistons", "Pacers", "Bucks", "Hawks", "Hornets", "Heat", "Magic", "Wizards", "SuperSonics", "Hornets (1988)"};
-
-        String[] nomsLongs = new String[]{"Nuggets de Denver", "Timberwolves du Minnesota",
-            "Thunder d'Oklahoma City", "Trail Blazers de Portland", "Jazz de l'Utah",
-            "Warriors de Golden State", "Clippers de Los Angeles", "Lakers de Los Angeles",
-            "Suns de Phoenix", "Kings de Sacramento", "Mavericks de Dallas", "Rockets de Houston",
-            "Grizzlies de Memphis", "Pelicans de La Nouvelle-Orléans", "Spurs de San Antonio",
-            "Celtics de Boston", "Nets de Brooklyn", "Knicks de New York", "76ers de Philadelphie",
-            "Raptors de Toronto", "Bulls de Chicago", "Cavaliers de Cleveland", "Pistons de Détroit",
-            "Pacers de l'Indiana", "Bucks de Milwaukee", "Hawks d'Atlanta", "Hornets de Charlotte",
-            "Heat de Miami", "Magic d'Orlando", "Wizards de Washington", "SuperSonics de Seattle", "Hornets de Charlotte"};
-
-        for (int i = 0; i < nomsCourts.length; ++i) {
-            if (adversaire.equals(nomsCourts[i])) {
-                adversaire = nomsLongs[i];
-                break;
-            }
-        }
+        adversaire = Json.getTeamNames_short_to_long().get(adversaire);
  
         Date dateRecord;
         try {   
@@ -495,11 +483,6 @@ public class DataManagement {
         return franchise;
     }
 
-    private String[] nomsFR = new String[]{"Minutes jouées", "Points", "Rebonds totaux",
-        "Passes décisives", "Interceptions", "Contres", "Rebonds offensifs",
-        "Rebonds défensifs", "Paniers marqués", "Paniers tentés", "Paniers à 3 points réussis",
-        "Paniers à 3 points tentés", "Lancers francs réussis", "Lancers francs tentés", "Balles perdues"};
-
     /**
      * Traduit le nom d'un record
      *
@@ -507,20 +490,7 @@ public class DataManagement {
      * @return le nom en français
      */
     private String traduireNom(String nom) {
-
-        String[] nomsEN = new String[]{"Minutes Played", "Points", "Rebounds",
-            "Assists", "Steals", "Blocks", "Offensive Rebounds", "Defensive Rebounds",
-            "Field Goals Made", "Field Goal Attempts", "3 Pointers Made", "3 Point Attempts",
-            "Free Throws Made", "Free Throw Attempts", "Turnovers"};
-    
-        for (int i = 0; i < nomsEN.length; ++i) {
-            if (nom.equals(nomsEN[i])) {
-                nom = nomsFR[i];
-                break;
-            }
-        }
-
-        return nom;
+        return Json.getStatNames_EN_to_FR().get(nom);
     }
 
     /**
@@ -794,5 +764,9 @@ public class DataManagement {
 
     public void setFinalContent(String finalContent) {
         this.contenuFinal = finalContent;
+    }
+
+    public void setJson(JsonManagement Json) {
+        this.Json = Json;
     }
 }

@@ -1,5 +1,7 @@
 package recordsnbawiki.packLogic;
 
+import recordsnbawiki.packLogic.json.JsonManagement;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import recordsnbawiki.packVue.Observer;
 import recordsnbawiki.utils.ESPNException;
@@ -38,12 +40,14 @@ public class Controller implements Observable {
     public void generateContent(int RealGM_id, int ESPN_id, boolean header) throws ESPNException, RealGMException {
 
         try {
-
+            JsonManagement Json = new JsonManagement();
+            dataManagement.setJson(Json);
+            
             String RealGM_content = dataManagement.getRealGMContent(RealGM_id);
             String ESPN_content = dataManagement.getESPNContent(ESPN_id);
             String final_content;
 
-            if (header) { // true signifie que l'en-tête doit être ajoutée
+            if (header) { // true means that the header must be added 
                 String contenuEnTete = dataManagement.getHeader();
                 final_content = contenuEnTete + RealGM_content + ESPN_content;
             } else {
@@ -69,6 +73,12 @@ public class Controller implements Observable {
                 notifyObservateurs("errorNoPlayerESPN");
             } else {
                 notifyObservateurs("errorESPN");
+            }
+        } catch (FileNotFoundException e) {
+            if ("teams.json".equals(e.getMessage())) {
+                notifyObservateurs("teams.jsonIssue");
+            } else {
+                notifyObservateurs("stats.jsonIssue");
             }
         }
     }
@@ -102,9 +112,9 @@ public class Controller implements Observable {
     
     @Override
     public void notifyObservateurs(String code) {
-        for (Observer obs : observateurs) {
+        observateurs.forEach((obs) -> {
             obs.update(code);
-        }
+        });
     }
 
     @Override

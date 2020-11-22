@@ -8,6 +8,9 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -26,28 +29,23 @@ import recordsnbawiki.utils.RealGMException;
  */
 public class Window extends JFrame implements Observer {
 
-    /**
-     * Controller
-     */
+    /** Controller */
     private Controller controller;
 
-    /**
-     * Model
-     */
+    /** Model */
     private DataManagement dataManagement;
 
-    /**
-     * Creates new form Window
-     */
+    /** Creates new form Window */
     public Window() {
         initComponents();
         addListeners();
-        
+         
         this.dataManagement = new DataManagement();
         this.controller = new Controller(dataManagement);
         
         this.controller.addObservateur(this);
         
+        this.setIcon();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         
@@ -119,6 +117,16 @@ public class Window extends JFrame implements Observer {
             case "names incompatibility":
                 displayWarningMessage();
                 break;
+            case "teams.jsonIssue":
+                label_alert.setText("Le fichier teams.json n'a pas pu être récupéré.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "stats.jsonIssue":
+                label_alert.setText("Le fichier stats.json n'a pas pu être récupéré.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
         }
     }
 
@@ -136,6 +144,19 @@ public class Window extends JFrame implements Observer {
         JOptionPane.showMessageDialog(this, message, "Erreur potentielle", JOptionPane.WARNING_MESSAGE);
     }
 
+    private void setIcon() {
+        BufferedImage image;
+        
+        try {
+            image = ImageIO.read(getClass().getClassLoader().getResource("basketball.png"));
+            
+        } catch (IOException | IllegalArgumentException e) {
+            image = (BufferedImage) this.getIconImage();
+        }
+        
+        this.setIconImage(image);
+    }
+    
     /**
      * Clean the textArea and init fields border
      */
@@ -176,24 +197,22 @@ public class Window extends JFrame implements Observer {
         disableComponents(true); // on désactive les composants pendant le chargement
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
 
-        new Thread(new Runnable() {
-            public void run() {
-                try {
-
-                    controller.generateContent(RealGM_id, ESPN_id, checkBox_header.isSelected());
-
-                    if (!stop) {
-                        textArea_content.setText(dataManagement.getFinalContent());
-                        controller.notifyObservateurs("copy");
-                        resetTextFields();
-                    }
-
-                    disableComponents(false);
-                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                    stop = false;
-
-                } catch (ESPNException | RealGMException e) {
+        new Thread(() -> {
+            try {
+                
+                controller.generateContent(RealGM_id, ESPN_id, checkBox_header.isSelected());
+                
+                if (!stop) {
+                    textArea_content.setText(dataManagement.getFinalContent());
+                    controller.notifyObservateurs("copy");
+                    resetTextFields();
                 }
+                
+                disableComponents(false);
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                stop = false;
+                
+            } catch (ESPNException | RealGMException e) {
             }
         }).start();
     }
