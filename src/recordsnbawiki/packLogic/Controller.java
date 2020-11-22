@@ -2,7 +2,10 @@ package recordsnbawiki.packLogic;
 
 import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import recordsnbawiki.packVue.Observer;
 import recordsnbawiki.utils.ESPNException;
 import recordsnbawiki.utils.RealGMException;
@@ -61,12 +64,15 @@ public class Controller implements Observable {
             dataManagement.setFinalContent(final_content);
 
         } catch (RealGMException e) {
-            if ("ID issue".equals(e.getMessage())) {
-                notifyObservateurs("errorNoPlayerRealGM");
-            } else if ("never played in NBA".equals(e.getMessage())) {
-                notifyObservateurs("errorNeverPlayedInNBARealGM");
-            } else {
+            if (null == e.getMessage()) {
                 notifyObservateurs("errorRealGM");
+            } else switch (e.getMessage()) {
+                case "ID issue":
+                    notifyObservateurs("errorNoPlayerRealGM");
+                    break;
+                case "never played in NBA":
+                    notifyObservateurs("errorNeverPlayedInNBARealGM");
+                    break;
             }
         } catch (ESPNException e) {
             if ("ID issue".equals(e.getMessage())) {
@@ -75,11 +81,24 @@ public class Controller implements Observable {
                 notifyObservateurs("errorESPN");
             }
         } catch (FileNotFoundException e) {
-            if ("teams.json".equals(e.getMessage())) {
-                notifyObservateurs("teams.jsonIssue");
-            } else {
-                notifyObservateurs("stats.jsonIssue");
+            if (null == e.getMessage()) {
+                notifyObservateurs("fileIssue");
+            } else switch (e.getMessage()) {
+                case "teams.json":
+                    notifyObservateurs("teams.jsonIssue");
+                    break;
+                case "stats.json":
+                    notifyObservateurs("stats.jsonIssue");
+                    break;
+                case "header_playoffs.txt":
+                    notifyObservateurs("header_playoffs.txtIssue");
+                    break;
+                case "header_noplayoffs.txt":
+                    notifyObservateurs("header_noplayoffs.txtIssue");
+                    break;
             }
+        } catch (IOException e) {
+            notifyObservateurs("fileIssue");
         }
     }
 

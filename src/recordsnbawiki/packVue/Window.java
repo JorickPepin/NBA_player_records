@@ -118,12 +118,27 @@ public class Window extends JFrame implements Observer {
                 displayWarningMessage();
                 break;
             case "teams.jsonIssue":
-                label_alert.setText("Le fichier teams.json n'a pas pu être récupéré.");
+                label_alert.setText("Le fichier teams.json est introuvable.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;
             case "stats.jsonIssue":
-                label_alert.setText("Le fichier stats.json n'a pas pu être récupéré.");
+                label_alert.setText("Le fichier stats.json est introuvable.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "header_playoffs.txtIssue":
+                label_alert.setText("Le fichier header_playoffs.txt est introuvable.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "header_noplayoffs.txtIssue":
+                label_alert.setText("Le fichier header_noplayoffs.txt est introuvable.");
+                label_alert.setForeground(Color.RED);
+                stop = true;
+                break;
+            case "fileIssue":
+                label_alert.setText("Une ressource n'a pas pu être récupérée.");
                 label_alert.setForeground(Color.RED);
                 stop = true;
                 break;

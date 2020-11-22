@@ -1,5 +1,8 @@
 package recordsnbawiki.packLogic;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.IOException;
 import java.text.ParseException;
@@ -7,6 +10,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
@@ -639,43 +644,39 @@ public class DataManagement {
      * l'introduction et les références
      *
      * @return l'en-tête
+     * @throws FileNotFoundException
      */
-    public String getHeader() {
-        String template;
-        if (aDesRecordsEnPlayoffs) {
-            template = "== Records sur une rencontre en NBA ==\n"
-                + "Les records personnels PLAYER_NAME en [[National Basketball Association|NBA]] sont les suivants<ref>{{Lien web |titre=TITLE_REALGM |url=URL_REALGM |langue=en |site=basketball.realgm.com}}</ref>{{,}}<ref>{{Lien web |titre=TITLE_ESPN |url=URL_ESPN |langue=en |site=espn.com}}</ref> :\n"
-                + "\n"
-                + "{| class=\"wikitable\" style=\"font-size: 95%; text-align:center;\"\n"
-                + "|+  class=\"hidden\" | Records personnels PLAYER_NAME\n"
-                + "|-\n"
-                + "! scope=\"col\" rowspan=\"2\"| Type de statistique\n"
-                + "! scope=\"col\" colspan=\"3\"| Saison régulière\n"
-                + "! scope=\"col\" colspan=\"3\"| Playoffs\n"
-                + "|-\n"
-                + "! scope=\"col\"| Record\n"
-                + "! scope=\"col\"| Adversaire\n"
-                + "! scope=\"col\"| Date\n"
-                + "! scope=\"col\"| Record\n"
-                + "! scope=\"col\"| Adversaire\n"
-                + "! scope=\"col\"| Date\n"
-                + "|-\n";
+    public String getHeader() throws FileNotFoundException, IOException {
+        
+        BufferedReader br;
+        
+        if (aDesRecordsEnPlayoffs) { // le header n'est pas le même si le joueur a des records en playoffs ou non
+            try { 
+                br = new BufferedReader(new FileReader("data/header_playoffs.txt"));
+            } catch (FileNotFoundException e) {
+                throw new FileNotFoundException("header_playoffs.txt");
+            }
         } else {
-            template = "== Records sur une rencontre en NBA ==\n"
-                + "Les records personnels PLAYER_NAME en [[National Basketball Association|NBA]] sont les suivants<ref>{{Lien web |titre=TITLE_REALGM |url=URL_REALGM |langue=en |site=basketball.realgm.com}}</ref>{{,}}<ref>{{Lien web |titre=TITLE_ESPN |url=URL_ESPN |langue=en |site=espn.com}}</ref> :\n"
-                + "\n"
-                + "{| class=\"wikitable\" style=\"font-size: 95%; text-align:center;\"\n"
-                + "|+  class=\"hidden\" | Records personnels PLAYER_NAME\n"
-                + "|-\n"
-                + "! scope=\"col\" rowspan=\"2\"| Type de statistique\n"
-                + "! scope=\"col\" colspan=\"3\"| Saison régulière\n"
-                + "|-\n"
-                + "! scope=\"col\"| Record\n"
-                + "! scope=\"col\"| Adversaire\n"
-                + "! scope=\"col\"| Date\n"
-                + "|-\n";
+            try {
+                br = new BufferedReader(new FileReader("data/header_noplayoffs.txt")); 
+            } catch (FileNotFoundException e) {
+                throw new FileNotFoundException("header_noplayoffs.txt");
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        String line = br.readLine();
+
+        while (line != null) {
+            sb.append(line);
+            sb.append(System.lineSeparator());
+            line = br.readLine();
         }
         
+        String template = sb.toString();
+
+        br.close();
+
         // remplacement des titres dans les références
         template = template.replace("TITLE_REALGM", recuperationNomJoueurRealGM() + " Career Bests");
         template = template.replace("TITLE_ESPN", recuperationNomJoueurESPN() + " Stats");
