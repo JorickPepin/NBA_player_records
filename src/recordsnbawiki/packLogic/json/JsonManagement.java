@@ -42,7 +42,7 @@ public class JsonManagement {
      */
     private void retrieveTeamNames() throws FileNotFoundException {
         try {
-            JsonReader reader = new JsonReader(new FileReader("data/teams.json"));
+            JsonReader reader = new JsonReader(new FileReader(getClass().getClassLoader().getResource("data/teams.json").getFile()));
         
             Type teamNameCollectionType = new TypeToken<List<TeamName>>(){}.getType();
             List<TeamName> teamNames = gson.fromJson(reader, teamNameCollectionType);
@@ -61,7 +61,7 @@ public class JsonManagement {
     
     private void retrieveStatNames() throws FileNotFoundException {
         try {
-            JsonReader reader = new JsonReader(new FileReader("data/stats.json"));
+            JsonReader reader = new JsonReader(new FileReader(getClass().getClassLoader().getResource("data/stats.json").getFile()));
         
             Type statNameCollectionType = new TypeToken<List<StatName>>(){}.getType();
             List<StatName> statNames = gson.fromJson(reader, statNameCollectionType);

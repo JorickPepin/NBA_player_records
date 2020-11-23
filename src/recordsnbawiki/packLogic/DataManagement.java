@@ -652,13 +652,13 @@ public class DataManagement {
         
         if (aDesRecordsEnPlayoffs) { // le header n'est pas le même si le joueur a des records en playoffs ou non
             try { 
-                br = new BufferedReader(new FileReader("data/header_playoffs.txt"));
+                br = new BufferedReader(new FileReader(getClass().getClassLoader().getResource("data/header_playoffs.txt").getFile()));
             } catch (FileNotFoundException e) {
                 throw new FileNotFoundException("header_playoffs.txt");
             }
         } else {
             try {
-                br = new BufferedReader(new FileReader("data/header_noplayoffs.txt")); 
+                br = new BufferedReader(new FileReader(getClass().getClassLoader().getResource("data/header_noplayoffs.txt").getFile()));
             } catch (FileNotFoundException e) {
                 throw new FileNotFoundException("header_noplayoffs.txt");
             }

@@ -163,7 +163,7 @@ public class Window extends JFrame implements Observer {
         BufferedImage image;
         
         try {
-            image = ImageIO.read(getClass().getClassLoader().getResource("basketball.png"));
+            image = ImageIO.read(getClass().getClassLoader().getResource("images/basketball.png"));
             
         } catch (IOException | IllegalArgumentException e) {
             image = (BufferedImage) this.getIconImage();
