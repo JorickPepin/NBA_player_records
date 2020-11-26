@@ -2,16 +2,15 @@ package recordsnbawiki.packLogic;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
@@ -652,14 +651,14 @@ public class DataManagement {
         
         if (aDesRecordsEnPlayoffs) { // le header n'est pas le même si le joueur a des records en playoffs ou non
             try { 
-                br = new BufferedReader(new FileReader(getClass().getClassLoader().getResource("data/header_playoffs.txt").getFile()));
-            } catch (FileNotFoundException e) {
+                br = new BufferedReader (new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("data/header_playoffs.txt"), StandardCharsets.UTF_8));
+            } catch (NullPointerException e) {
                 throw new FileNotFoundException("header_playoffs.txt");
             }
         } else {
             try {
-                br = new BufferedReader(new FileReader(getClass().getClassLoader().getResource("data/header_noplayoffs.txt").getFile()));
-            } catch (FileNotFoundException e) {
+                br = new BufferedReader (new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("data/header_noplayoffs.txt"), StandardCharsets.UTF_8));
+            } catch (NullPointerException e) {
                 throw new FileNotFoundException("header_noplayoffs.txt");
             }
         }
