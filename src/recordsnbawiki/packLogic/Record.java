@@ -75,7 +75,7 @@ public class Record {
 
     @Override
     public String toString() {
-        if (date.isBlank()) { // record réalisé plusieurs fois par le joueur
+        if (date.isEmpty()) { // record réalisé plusieurs fois par le joueur
             return valeur + " || colspan=\"2\"| " + adversaire + "\n";
         } else {
             return valeur + " || " + adversaire + " || " + date + "\n";

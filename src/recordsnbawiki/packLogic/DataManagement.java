@@ -85,7 +85,7 @@ public class DataManagement {
             recordPL = document.getElementsByClass("basketball stack force-table").last().text();
 
             // l'identifiant correspond à un joueur mais celui-ci n'a jamais joué en NBA
-            if (recordSR.isBlank()) {
+            if (recordSR.isEmpty()) {
                 throw new RealGMException("never played in NBA");
             }
 
