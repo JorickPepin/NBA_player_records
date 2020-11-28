@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
@@ -107,7 +108,7 @@ public class DataManagement {
      * et une avec ceux en PL
      * @throws ParseException
      */
-    private ArrayList[] traitementContenuRealGM(String[] contenu) throws RealGMException {
+    private List<ArrayList<Record>> traitementContenuRealGM(String[] contenu) throws RealGMException {
         // la dernière info sur un record est sa date, on split donc 
         // les chaînes récupérées par les dates pour avoir les records séparement
         // on split également par "-" car c'est la seule info que contient la ligne si le record
@@ -168,7 +169,11 @@ public class DataManagement {
             }
         }
         
-        return new ArrayList[]{listeRecordsSR, listeRecordsPL};
+        List<ArrayList<Record>> liste = new ArrayList<>();
+        liste.add(listeRecordsSR);
+        liste.add(listeRecordsPL);
+        
+        return liste;
     }
 
     /**
@@ -178,9 +183,9 @@ public class DataManagement {
      * en SR et une avec ceux en PL
      * @return une chaîne de caractères correspondant au code Wiki des records
      */
-    private String miseEnFormeContenuRealGM(ArrayList[] listes) {
-        ArrayList<Record> listeRecordsSR = listes[0];
-        ArrayList<Record> listeRecordsPL = listes[1];
+    private String miseEnFormeContenuRealGM(List<ArrayList<Record>> listes) {
+        ArrayList<Record> listeRecordsSR = listes.get(0);
+        ArrayList<Record> listeRecordsPL = listes.get(1);
 
         String contenuRealGM = "";
 
@@ -736,7 +741,7 @@ public class DataManagement {
      */
     public String getRealGMContent(int identifiantRealGM) throws RealGMException {
         String[] contenuBrutRealGM = recuperationContenuRealGM(identifiantRealGM);
-        ArrayList[] listesRecords = traitementContenuRealGM(contenuBrutRealGM);
+        List<ArrayList<Record>> listesRecords = traitementContenuRealGM(contenuBrutRealGM);
         String contenuFinalRealGM = miseEnFormeContenuRealGM(listesRecords);
 
         return contenuFinalRealGM;
