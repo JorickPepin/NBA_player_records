@@ -45,7 +45,7 @@
         </jar>
     </target>
 
-    <target name="run">
+    <target name="run" depends="jar">
         <java fork="true" classname="${main-class}">
             <classpath>
                 <path refid="classpath"/>
