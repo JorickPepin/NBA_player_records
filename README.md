@@ -1,8 +1,22 @@
 # Wikipedia-help
 
-**In progress: retrieving content from a user interface rather than from text files.**
+**README en cours de réécriture...**
 
 ---
+## Installation
+
+Utilisez la commande ```ant``` ou ```ant -f build.xml``` depuis le dossier cloné pour compiler le programme.
+
+L'exécutable ```.jar``` est créé dans le dossier ```build/jar/```.
+
+Vous pouvez également utiliser la commande ```ant run``` pour créer et exécuter le ```.jar```.
+
+## Présentation
+
+...
+
+---
+Ancienne version :
 
 This program is a help to make **NBA players maintenance** easier on the **French Wikipedia**.
 
