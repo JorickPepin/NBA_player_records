@@ -579,7 +579,7 @@ public class DataManagement {
 
         } catch (HttpStatusException e) {
             throw new ESPNException("ID issue");
-        } catch (IOException e) {
+        } catch (IOException | IndexOutOfBoundsException e) {
             throw new ESPNException();
         }
 
