@@ -570,11 +570,14 @@ public class DataManagement {
             // ".NoDataAvailable__Msg__Content"
             // si cette classe n'existe pas, les données sont accessibles
             if (document.select(".NoDataAvailable__Msg__Content").isEmpty()) {
-
-                // le nombre de double-double en playoffs correspond au 36e élément <span class="fw-bold">
-                DD2_PL = document.select("span.fw-bold").get(36).text();
-                // le nombre de triple-double en playoffs correspond au 37e élément <span class="fw-bold">
-                TD3_PL = document.select("span.fw-bold").get(37).text();
+                
+                // le tableau contenant les DD2 et TD3 n'est pas présent
+                if (!document.select("Regular Season Misc Totals").isEmpty()) {
+                    // le nombre de double-double en playoffs correspond au 36e élément <span class="fw-bold">
+                    DD2_PL = document.select("span.fw-bold").get(36).text();
+                    // le nombre de triple-double en playoffs correspond au 37e élément <span class="fw-bold">
+                    TD3_PL = document.select("span.fw-bold").get(37).text();
+                }
             }
 
         } catch (HttpStatusException e) {
