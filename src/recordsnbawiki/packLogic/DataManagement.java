@@ -572,7 +572,7 @@ public class DataManagement {
             if (document.select(".NoDataAvailable__Msg__Content").isEmpty()) {
                 
                 // le tableau contenant les DD2 et TD3 n'est pas présent
-                if (!document.select("Regular Season Misc Totals").isEmpty()) {
+                if (document.text().contains("Postseason Misc Totals")) {
                     // le nombre de double-double en playoffs correspond au 36e élément <span class="fw-bold">
                     DD2_PL = document.select("span.fw-bold").get(36).text();
                     // le nombre de triple-double en playoffs correspond au 37e élément <span class="fw-bold">
