@@ -1,11 +1,6 @@
 package recordsnbawiki.packLogic;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -14,50 +9,42 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import recordsnbawiki.utils.ESPNException;
+import recordsnbawiki.packLogic.json.JsonManagement;
 import recordsnbawiki.utils.RealGMException;
 
 /**
- * Récupération et traitement du contenu
  *
  * @author Jorick
  */
-public class DataManagement {
-
-    private String contenuFinal;
-
-    /**
-     * Titre de la page web RealGM pour récupérer le nom du joueur
-     */
-    private String titreRealGM;
-
-    /**
-     * Titre de la page web ESPN pour récupérer le nom du joueur
-     */
-    private String titreESPN;
-
-    /**
-     * Contient l'url RealGM personnalisée selon le joueur
-     */
-    private String URL_RealGM;
-
-    /**
-     * Contient l'url ESPN personnalisée selon le joueur
-     */
-    private String URL_ESPN;
-
+public class RealGM {
+    
+    /** Titre de la page web RealGM (permet d'avoir le nom du joueur) */
+    private String titre;
+    
+    /** URL de la page web RealGM */
+    private String url;
+    
     /**
      * Permet de savoir si le joueur a au moins un record en playoffs
-     * afin de ne pas les afficher s'il n'en a pas 
+     * afin de ne pas afficher la partie droite du tableau s'il n'en a pas 
      */
     private boolean aDesRecordsEnPlayoffs;
     
     /** Permet d'utiliser les données récupérées dans les fichiers json */
-    private JsonManagement Json;
+    private JsonManagement json;
     
+    public String genererContenu(int id) throws RealGMException {
+        this.url = "https://basketball.realgm.com/player/wd/Bests/" + id + "/NBA";
+        this.aDesRecordsEnPlayoffs = false;
+        
+        String[] contenuBrut = recuperationContenu();
+        List<ArrayList<Record>> listesRecords = traitementContenu(contenuBrut);
+        String contenuFinal = miseEnFormeContenu(listesRecords);
+        
+        return contenuFinal;
+    }
     /**
      * Récupère le contenu des deux tableaux contenant les records depuis le
      * code source de la page du joueur
@@ -67,17 +54,15 @@ public class DataManagement {
      * régulière (SR) et une pour ceux en playoffs (PL)
      * @throws RealGMException
      */
-    private String[] recuperationContenuRealGM(int identifiant) throws RealGMException {
+    private String[] recuperationContenu() throws RealGMException {
         String recordSR = "";
         String recordPL = "";
 
-        URL_RealGM = "https://basketball.realgm.com/player/wd/Bests/" + identifiant + "/NBA";
-
         try {
-            Document document = Jsoup.connect(URL_RealGM).get();
+            Document document = Jsoup.connect(url).get();
 
             // récupération du titre de la page
-            titreRealGM = document.title();
+            titre = document.title();
 
             // la classe "basketball stack force-table" est présente 2 fois dans le code source
             // première fois pour les records en saison régulière
@@ -98,7 +83,7 @@ public class DataManagement {
 
         return new String[]{recordSR, recordPL};
     }
-
+    
     /**
      * Crée les records à partir du contenu brut de RealGM
      *
@@ -108,7 +93,7 @@ public class DataManagement {
      * et une avec ceux en PL
      * @throws ParseException
      */
-    private List<ArrayList<Record>> traitementContenuRealGM(String[] contenu) throws RealGMException {
+    private List<ArrayList<Record>> traitementContenu(String[] contenu) throws RealGMException {
         // la dernière info sur un record est sa date, on split donc 
         // les chaînes récupérées par les dates pour avoir les records séparement
         // on split également par "-" car c'est la seule info que contient la ligne si le record
@@ -141,7 +126,6 @@ public class DataManagement {
         }
       
         i = 0;
-        aDesRecordsEnPlayoffs = false;
         for (String s : recordsPL) {
             if (s.matches("^.*\\d$")) {
                 listeRecordsPL.set(i, new Record(getNomRecord(s), getValeurRecord(s), getAdversaireRecord(s), getDateRecord(s)));
@@ -156,7 +140,7 @@ public class DataManagement {
         // si c'est le cas, on ajoute un record 'vide' à la place où il devrait être
         
         ArrayList<String> nomsFR = new ArrayList<>(); // liste contenant les statistiques en français
-        Json.getStatNames_EN_to_FR().forEach((k, v) -> {
+        json.getStatNames_EN_to_FR().forEach((k, v) -> {
             nomsFR.add(v);
         });
         
@@ -175,7 +159,7 @@ public class DataManagement {
         
         return liste;
     }
-
+    
     /**
      * Crée le contenu final en mettant en forme les records
      *
@@ -183,7 +167,7 @@ public class DataManagement {
      * en SR et une avec ceux en PL
      * @return une chaîne de caractères correspondant au code Wiki des records
      */
-    private String miseEnFormeContenuRealGM(List<ArrayList<Record>> listes) {
+    private String miseEnFormeContenu(List<ArrayList<Record>> listes) {
         ArrayList<Record> listeRecordsSR = listes.get(0);
         ArrayList<Record> listeRecordsPL = listes.get(1);
 
@@ -221,7 +205,7 @@ public class DataManagement {
 
         return contenuRealGM;
     }
-
+    
     /**
      * Applique les liens internes et les modèles sur les records
      *
@@ -396,7 +380,7 @@ public class DataManagement {
      */
     private String traduireAdversaire(String adversaire, String date) throws RealGMException {
         
-        adversaire = Json.getTeamNames_short_to_long().get(adversaire);
+        adversaire = json.getTeamNames_short_to_long().get(adversaire);
  
         Date dateRecord;
         try {   
@@ -499,7 +483,7 @@ public class DataManagement {
      * @return le nom en français
      */
     private String traduireNom(String nom) {
-        return Json.getStatNames_EN_to_FR().get(nom);
+        return json.getStatNames_EN_to_FR().get(nom);
     }
 
     /**
@@ -523,258 +507,25 @@ public class DataManagement {
             return res;
         }
     }
-
-    /**
-     * Récupération du nombre de double-double et triple-double en saison
-     * régulière et en playoffs sur espn.com
-     *
-     * @param identifiant l'identifiant ESPN du joueur
-     * @return
-     * @throws recordsnbawiki.utils.NoPlayerESPNException
-     * @throws java.io.IOException
-     */
-    private String[] recuperationContenuESPN(int identifiant) throws ESPNException {
-
-        String DD2_SR = "0";
-        String TD3_SR = "0";
-
-        URL_ESPN = "https://www.espn.com/nba/player/stats/_/id/" + identifiant;
-
-        // récupération du nombre de double-double et triple-double en saison régulière
-        try {
-            Document document = Jsoup.connect(URL_ESPN).get();
-
-            // récupération du titre de la page
-            titreESPN = document.title();
-
-            // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
-            DD2_SR = document.select("span.fw-bold").get(36).text();
-            // le nombre de triple-double en saison régulière correspond au 37e élément <span class="fw-bold">
-            TD3_SR = document.select("span.fw-bold").get(37).text();
-
-        } catch (HttpStatusException e) {
-            throw new ESPNException("ID issue");
-        } catch (IOException | IndexOutOfBoundsException e) {
-            throw new ESPNException();
-        }
-
-        String DD2_PL = "0";
-        String TD3_PL = "0";
-
-        // récupération du nombre de double-double et triple-double en playoffs
-        try {
-            Document document = Jsoup.connect(URL_ESPN + "/type/nba/seasontype/3").get();
-
-            // si le joueur n'a jamais disputé les playoffs, la page contient
-            // un message "No available information." accessible depuis la classe
-            // ".NoDataAvailable__Msg__Content"
-            // si cette classe n'existe pas, les données sont accessibles
-            if (document.select(".NoDataAvailable__Msg__Content").isEmpty()) {
-                
-                // le tableau contenant les DD2 et TD3 n'est pas présent
-                if (document.text().contains("Postseason Misc Totals")) {
-                    // le nombre de double-double en playoffs correspond au 36e élément <span class="fw-bold">
-                    DD2_PL = document.select("span.fw-bold").get(36).text();
-                    // le nombre de triple-double en playoffs correspond au 37e élément <span class="fw-bold">
-                    TD3_PL = document.select("span.fw-bold").get(37).text();
-                }
-            }
-
-        } catch (HttpStatusException e) {
-            throw new ESPNException("ID issue");
-        } catch (IOException | IndexOutOfBoundsException e) {
-            throw new ESPNException();
-        }
-
-        return new String[]{DD2_SR, TD3_SR, DD2_PL, TD3_PL};
+    
+    public void setJson(JsonManagement json) {
+        this.json = json;
     }
 
-    /**
-     * Mise en forme des valeurs récupérées sur ESPN
-     *
-     * @param valeurs
-     * @return le texte de fin de page avec les stats DD2, TD3 et la date de màj
-     */
-    private String miseEnFormeContenuESPN(String[] valeurs) throws ESPNException {
+    public boolean getADesRecordsEnPlayoffs() {
+        return aDesRecordsEnPlayoffs;
+    }    
 
-        int nbDD2_SR;
-        int nbTD3_SR;
-        int nbDD2_PL;
-        int nbTD3_PL;
-
-        String ligne_DD2 = "* [[Double-double]] : ";
-        String ligne_TD3 = "* [[Triple-double]] : ";
-
-        try {
-            nbDD2_SR = Integer.valueOf(valeurs[0]);
-            nbTD3_SR = Integer.valueOf(valeurs[1]);
-
-            nbDD2_PL = Integer.valueOf(valeurs[2]);
-            nbTD3_PL = Integer.valueOf(valeurs[3]);
-
-            int nbTotalDD2 = nbDD2_SR + nbDD2_PL;
-            int nbTotalTD3 = nbTD3_SR + nbTD3_PL;
-
-            ligne_DD2 += nbTotalDD2;
-            ligne_TD3 += nbTotalTD3;
-
-            if (nbDD2_PL > 0) { // s'il y a des DD2 en playoffs
-                ligne_DD2 += " (dont " + nbDD2_PL + " en playoffs)";
-            }
-
-            if (nbTD3_PL > 0) { // s'il y a des TD3 en playoffs
-                ligne_TD3 += " (dont " + nbTD3_PL + " en playoffs)";
-            }
-        } catch (NumberFormatException e) {
-            throw new ESPNException();
-        }
-
-        return ligne_DD2 + "\n" + ligne_TD3 + recuperationDateDuJour();
+    public String getTitre() {
+        return titre;
     }
 
-    /**
-     * Retourne la date du jour au bon format
-     *
-     * @return la date du jour
-     */
-    private String recuperationDateDuJour() {
-
-        Date date = new Date();
-
-        SimpleDateFormat formatter = new SimpleDateFormat("d MMMM yyyy");
-
-        return "\n''Dernière mise à jour : {{date-|" + formatter.format(date) + "}}''";
+    public String getUrl() {
+        return url;
     }
-
-    /**
-     * Crée et retourne l'en-tête comprend le titre de section, le modèle,
-     * l'introduction et les références
-     *
-     * @return l'en-tête
-     * @throws FileNotFoundException
-     */
-    public String getHeader() throws FileNotFoundException, IOException {
-        
-        BufferedReader br;
-        
-        if (aDesRecordsEnPlayoffs) { // le header n'est pas le même si le joueur a des records en playoffs ou non
-            try { 
-                br = new BufferedReader (new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("data/header_playoffs.txt"), StandardCharsets.UTF_8));
-            } catch (NullPointerException e) {
-                throw new FileNotFoundException("header_playoffs.txt");
-            }
-        } else {
-            try {
-                br = new BufferedReader (new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("data/header_noplayoffs.txt"), StandardCharsets.UTF_8));
-            } catch (NullPointerException e) {
-                throw new FileNotFoundException("header_noplayoffs.txt");
-            }
-        }
-
-        StringBuilder sb = new StringBuilder();
-        String line = br.readLine();
-
-        while (line != null) {
-            sb.append(line);
-            sb.append(System.lineSeparator());
-            line = br.readLine();
-        }
-        
-        String template = sb.toString();
-
-        br.close();
-
-        // remplacement des titres dans les références
-        template = template.replace("TITLE_REALGM", recuperationNomJoueurRealGM() + " Career Bests");
-        template = template.replace("TITLE_ESPN", recuperationNomJoueurESPN() + " Stats");
-
-        // remplacement des url dans les références
-        template = template.replace("URL_REALGM", URL_RealGM);
-        template = template.replace("URL_ESPN", URL_ESPN);
-
-        String nomDuJoueur = recuperationNomJoueurESPN();
-
-        if (necessiteElision(nomDuJoueur.charAt(0))) { // si le nom commence par une voyelle ou un h
-            template = template.replace("PLAYER_NAME", "d'" + nomDuJoueur);
-        } else {
-            template = template.replace("PLAYER_NAME", "de " + nomDuJoueur);
-        }
-
-        return template;
-    }
-
-    /**
-     * Permet de savoir si une élision est nécessaire devant un nom
-     *
-     * @param c - le premier caractère du nom
-     * @return true si c'est une voyelle ou un h, false sinon
-     */
-    private boolean necessiteElision(char c) {
-        return "AEIOUaeiouHh".indexOf(c) != -1;
-    }
-
-    /**
-     * Retourne le nom et le prénom du joueur à partir du titre de la page
-     * RealGM
-     *
-     * @return string contenant prénom et nom du joueur
-     */
-    public String recuperationNomJoueurRealGM() {
+    
+    public String getNomJoueur() {
         // le nom du joueur correspond à la partie gauche avant "Career"
-        return titreRealGM.substring(0, titreRealGM.indexOf(" Career"));
-    }
-
-    /**
-     * Retourne le nom et le prénom du joueur à partir du titre de la page ESPN
-     *
-     * @return
-     */
-    public String recuperationNomJoueurESPN() {
-        // le nom du joueur correspond à la partie gauche avant "Stats"
-        return titreESPN.substring(0, titreESPN.indexOf(" Stats"));
-    }
-
-    /**
-     * Retourne le contenu final contenant les records personnels du joueur
-     *
-     * @param identifiantRealGM - identifiant RealGM du joueur
-     * @return une chaîne de caractères correspondant au contenu de RealGM mis
-     * en forme
-     * @throws RealGMException
-     */
-    public String getRealGMContent(int identifiantRealGM) throws RealGMException {
-        String[] contenuBrutRealGM = recuperationContenuRealGM(identifiantRealGM);
-        List<ArrayList<Record>> listesRecords = traitementContenuRealGM(contenuBrutRealGM);
-        String contenuFinalRealGM = miseEnFormeContenuRealGM(listesRecords);
-
-        return contenuFinalRealGM;
-    }
-
-    /**
-     * Retourne le contenu contenant le nombre de double-double et triple-double
-     * du joueur
-     *
-     * @param identifiantESPN - identifiant ESPN du joueur
-     * @return une chaîne de caractères correspondant au contenu d'ESPN mis en
-     * forme + la date de màj
-     * @throws ESPNException
-     */
-    public String getESPNContent(int identifiantESPN) throws ESPNException {
-        String[] contenuBrutESPN = recuperationContenuESPN(identifiantESPN);
-        String contenuFinalESPN = miseEnFormeContenuESPN(contenuBrutESPN);
-
-        return contenuFinalESPN;
-    }
-
-    public String getFinalContent() {
-        return contenuFinal;
-    }
-
-    public void setFinalContent(String finalContent) {
-        this.contenuFinal = finalContent;
-    }
-
-    public void setJson(JsonManagement Json) {
-        this.Json = Json;
+        return titre.substring(0, titre.indexOf(" Career"));
     }
 }

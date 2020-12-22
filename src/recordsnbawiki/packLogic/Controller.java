@@ -3,10 +3,7 @@ package recordsnbawiki.packLogic;
 import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import recordsnbawiki.packVue.Observer;
+import recordsnbawiki.packVue.Window;
 import recordsnbawiki.utils.ESPNException;
 import recordsnbawiki.utils.RealGMException;
 
@@ -14,21 +11,24 @@ import recordsnbawiki.utils.RealGMException;
  *
  * @author Jorick
  */
-public class Controller implements Observable {
+public class Controller {
 
-    /**
-     * Observer list
-     */
-    private ArrayList<Observer> observateurs;
 
-    /**
-     * Model
-     */
-    private DataManagement dataManagement;
-
-    public Controller(DataManagement dataManagement) {
-        this.observateurs = new ArrayList<>();
-        this.dataManagement = dataManagement;
+    private String content;
+    
+    private Window view;
+    
+    private RealGM realGM;
+    
+    private ESPN espn;
+    
+    public Controller() {
+        //this.observateurs = new ArrayList<>();
+        this.view = new Window(this);
+        this.realGM = new RealGM();
+        this.espn = new ESPN();
+                
+        //this.dataManagement = dataManagement;
     }
 
     /**
@@ -36,13 +36,37 @@ public class Controller implements Observable {
      *
      * @param RealGM_id - the player's RealGM identifier
      * @param ESPN_id - the player's ESPN identifier
-     * @param header - true if the header is needed, false otherwise
+     * @param header_required - true if the header is needed, false otherwise
      * @throws RealGMException
      * @throws ESPNException
      */
-    public void generateContent(int RealGM_id, int ESPN_id, boolean header) throws ESPNException, RealGMException {
-
+    public void generateContent(int RealGM_id, int ESPN_id, boolean header_required) throws ESPNException, RealGMException {
+        
         try {
+            
+            realGM.setJson(new JsonManagement());
+            
+ 
+            
+            String RealGM_content = realGM.genererContenu(RealGM_id);
+            String ESPN_content = espn.genererContenu(ESPN_id);
+            
+            String final_content;
+            
+            if (header_required) {
+                Header header = new Header(realGM, espn);
+                final_content = header.getContenu() + RealGM_content + ESPN_content;
+            } else {
+                final_content = RealGM_content + ESPN_content;
+            }
+            
+            this.content = final_content;
+            
+            if (!namesAreCompatible()) { // display warning message if the two names are not identical
+                view.update("names incompatibility");
+            }
+            
+        /*try {
             JsonManagement Json = new JsonManagement();
             dataManagement.setJson(Json);
             
@@ -62,43 +86,43 @@ public class Controller implements Observable {
             }
             
             dataManagement.setFinalContent(final_content);
-
+*/
         } catch (RealGMException e) {
             if (null == e.getMessage()) {
-                notifyObservateurs("errorRealGM");
+                view.update("errorRealGM");
             } else switch (e.getMessage()) {
                 case "ID issue":
-                    notifyObservateurs("errorNoPlayerRealGM");
+                    view.update("errorNoPlayerRealGM");
                     break;
                 case "never played in NBA":
-                    notifyObservateurs("errorNeverPlayedInNBARealGM");
+                    view.update("errorNeverPlayedInNBARealGM");
                     break;
             }
         } catch (ESPNException e) {
             if ("ID issue".equals(e.getMessage())) {
-                notifyObservateurs("errorNoPlayerESPN");
+                view.update("errorNoPlayerESPN");
             } else {
-                notifyObservateurs("errorESPN");
+                view.update("errorESPN");
             }
         } catch (FileNotFoundException e) {
             if (null == e.getMessage()) {
-                notifyObservateurs("fileIssue");
+                view.update("fileIssue");
             } else switch (e.getMessage()) {
                 case "teams.json":
-                    notifyObservateurs("teams.jsonIssue");
+                    view.update("teams.jsonIssue");
                     break;
                 case "stats.json":
-                    notifyObservateurs("stats.jsonIssue");
+                    view.update("stats.jsonIssue");
                     break;
                 case "header_playoffs.txt":
-                    notifyObservateurs("header_playoffs.txtIssue");
+                    view.update("header_playoffs.txtIssue");
                     break;
                 case "header_noplayoffs.txt":
-                    notifyObservateurs("header_noplayoffs.txtIssue");
+                    view.update("header_noplayoffs.txtIssue");
                     break;
             }
         } catch (IOException e) {
-            notifyObservateurs("fileIssue");
+            view.update("fileIssue");
         }
     }
 
@@ -108,8 +132,8 @@ public class Controller implements Observable {
      */
     private boolean namesAreCompatible() {
      
-        String RealGM_name = dataManagement.recuperationNomJoueurRealGM();
-        String ESPN_name = dataManagement.recuperationNomJoueurESPN();
+        String RealGM_name = realGM.getNomJoueur();
+        String ESPN_name = espn.getNomJoueur();
         
         String RealGM_name_formatted = "";
         String ESPN_name_formatted = "";
@@ -128,16 +152,16 @@ public class Controller implements Observable {
           
         return RealGM_name_formatted.equalsIgnoreCase(ESPN_name_formatted);
     }
-    
-    @Override
-    public void notifyObservateurs(String code) {
-        observateurs.forEach((obs) -> {
-            obs.update(code);
-        });
-    }
 
-    @Override
-    public void addObservateur(Observer obs) {
-        observateurs.add(obs);
+    public String getRealGMPlayerName() {
+        return realGM.getNomJoueur();
+    }
+    
+    public String getESPNPlayerName() {
+        return espn.getNomJoueur();
+    }
+    
+    public String getContent() {
+        return content;
     }
 }

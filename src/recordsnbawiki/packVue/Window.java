@@ -19,7 +19,6 @@ import javax.swing.ToolTipManager;
 import javax.swing.border.Border;
 import static org.jsoup.internal.StringUtil.isNumeric;
 import recordsnbawiki.packLogic.Controller;
-import recordsnbawiki.packLogic.DataManagement;
 import recordsnbawiki.utils.ESPNException;
 import recordsnbawiki.utils.RealGMException;
 
@@ -27,23 +26,21 @@ import recordsnbawiki.utils.RealGMException;
  *
  * @author Jorick
  */
-public class Window extends JFrame implements Observer {
+public class Window extends JFrame {
 
     /** Controller */
     private Controller controller;
 
-    /** Model */
-    private DataManagement dataManagement;
-
-    /** Creates new form Window */
-    public Window() {
+    /** 
+     * Creates new form Window
+     * 
+     * @param controller 
+     */
+    public Window(Controller controller) {
+        this.controller = controller;
+        
         initComponents();
         addListeners();
-         
-        this.dataManagement = new DataManagement();
-        this.controller = new Controller(dataManagement);
-        
-        this.controller.addObservateur(this);
         
         this.setIcon();
         this.setLocationRelativeTo(null);
@@ -51,8 +48,7 @@ public class Window extends JFrame implements Observer {
         
         ToolTipManager.sharedInstance().setEnabled(false);
     }
-
-    @Override
+    
     public void update(String code) {
 
         switch (code) {
@@ -151,9 +147,9 @@ public class Window extends JFrame implements Observer {
     private void displayWarningMessage() {
         String message = "Il se peut que les identifiants n'appartiennent pas au même joueur.\n\n"
                 + "Joueur récupéré sur RealGM : "
-                + dataManagement.recuperationNomJoueurRealGM()
+                + controller.getRealGMPlayerName()
                 + "\nJoueur récupéré sur ESPN : "
-                + dataManagement.recuperationNomJoueurESPN()
+                + controller.getESPNPlayerName()
                 + "\n\nAssurez-vous qu'il s'agit du même joueur avant de publier le contenu sur Wikipédia.";
 
         JOptionPane.showMessageDialog(this, message, "Erreur potentielle", JOptionPane.WARNING_MESSAGE);
@@ -207,7 +203,7 @@ public class Window extends JFrame implements Observer {
      * @param ESPN_id
      */
     private void addContentToTextArea(int RealGM_id, int ESPN_id) {
-        controller.notifyObservateurs("loading");
+        this.update("loading");
 
         disableComponents(true); // on désactive les composants pendant le chargement
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
@@ -218,8 +214,8 @@ public class Window extends JFrame implements Observer {
                 controller.generateContent(RealGM_id, ESPN_id, checkBox_header.isSelected());
                 
                 if (!stop) {
-                    textArea_content.setText(dataManagement.getFinalContent());
-                    controller.notifyObservateurs("copy");
+                    textArea_content.setText(controller.getContent());
+                    this.update("copy");
                     resetTextFields();
                 }
                 
@@ -227,8 +223,7 @@ public class Window extends JFrame implements Observer {
                 setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 stop = false;
                 
-            } catch (ESPNException | RealGMException e) {
-            }
+            } catch (ESPNException | RealGMException e) {}
         }).start();
     }
 
@@ -283,14 +278,14 @@ public class Window extends JFrame implements Observer {
                 } catch (NumberFormatException e) {
                     textField_RealGM.setBorder(redBorder);
                     textField_ESPN.setBorder(redBorder);
-                    controller.notifyObservateurs("out of bounds");
+                    this.update("out of bounds");
                 }        
                 
             } else {
-                controller.notifyObservateurs("invalidEntry");
+                this.update("invalidEntry");
             }
         } else {
-            controller.notifyObservateurs("fieldsNotFilled");
+            this.update("fieldsNotFilled");
         }
     }
     
@@ -433,11 +428,11 @@ public class Window extends JFrame implements Observer {
     }// </editor-fold>//GEN-END:initComponents
 
     private void button_submitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_submitActionPerformed
-        controller.notifyObservateurs("submission");
+        this.update("submission");
     }//GEN-LAST:event_button_submitActionPerformed
 
     private void button_copyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button_copyActionPerformed
-        controller.notifyObservateurs("copy");
+        this.update("copy");
     }//GEN-LAST:event_button_copyActionPerformed
 
     private void addListeners() {
@@ -452,7 +447,7 @@ public class Window extends JFrame implements Observer {
         public void keyPressed(KeyEvent e) {
             // user presses enter key
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                controller.notifyObservateurs("submission");
+                update("submission");
             }
         }
         
