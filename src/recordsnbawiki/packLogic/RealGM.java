@@ -45,6 +45,7 @@ public class RealGM {
         
         return contenuFinal;
     }
+    
     /**
      * Récupère le contenu des deux tableaux contenant les records depuis le
      * code source de la page du joueur

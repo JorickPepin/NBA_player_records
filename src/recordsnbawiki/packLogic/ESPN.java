@@ -3,6 +3,8 @@ package recordsnbawiki.packLogic;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -20,8 +22,18 @@ public class ESPN {
     /** URL de la page web ESPN */
     private String url;
     
+    private boolean warning;
+    
+    /**
+     * Génère et retourne le contenu des DD2 et TD3
+     * 
+     * @param id - l'identifiant ESPN du joueur
+     * @return le contenu mis en forme
+     * @throws ESPNException 
+     */
     public String genererContenu(int id) throws ESPNException {
         this.url = "https://www.espn.com/nba/player/stats/_/id/" + id;
+        this.warning = false;
         
         String[] contenuBrut = recuperationContenu();
         String contenuFinal = miseEnFormeContenu(contenuBrut);
@@ -46,7 +58,9 @@ public class ESPN {
         // récupération du nombre de double-double et triple-double en saison régulière
         try {
             Document document = Jsoup.connect(url).get();
-
+                    
+            this.warning = necessiteWarning(document);
+            
             // récupération du titre de la page
             titre = document.title();
 
@@ -90,6 +104,29 @@ public class ESPN {
         }
 
         return new String[]{DD2_SR, TD3_SR, DD2_PL, TD3_PL};
+    }
+
+    /**
+     * Retourne true si le joueur a joué des matchs avant la saison 1993-1994
+     * (ESPN n'affiche pas les DD2 et TD3 avant cette saison-là)
+     * 
+     * @return true si le joueur a joué des matchs avant 1993-1994, false sinon
+     */
+    private boolean necessiteWarning(Document document) {
+        
+        Pattern p = Pattern.compile("Regular Season Averages season Team ([^\\s]+)"); // récupère la première saison du joueur
+        Matcher m = p.matcher(document.text());
+        
+        boolean res = false;
+        
+        if (m.find()) {
+            String premiereSaison = m.group(1);
+            if (!premiereSaison.contains("-")) { // il y a un tiret à partir de la saison 93-94
+                res = true;
+            }
+        }
+
+        return res;
     }
     
     /**
@@ -157,9 +194,12 @@ public class ESPN {
         return url;
     }
 
+    public boolean necessiteWarning() {
+        return warning;
+    }
+    
     public String getNomJoueur() {
         // le nom du joueur correspond à la partie gauche avant "Stats"
         return titre.substring(0, titre.indexOf(" Stats"));
     }
-    
 }

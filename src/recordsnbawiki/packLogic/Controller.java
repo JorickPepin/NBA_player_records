@@ -12,23 +12,20 @@ import recordsnbawiki.utils.RealGMException;
  * @author Jorick
  */
 public class Controller {
-
-
-    private String content;
-    
+ 
     private Window view;
     
     private RealGM realGM;
-    
     private ESPN espn;
     
+    /*** Store the final content */
+    private String content;
+    
     public Controller() {
-        //this.observateurs = new ArrayList<>();
         this.view = new Window(this);
+        
         this.realGM = new RealGM();
-        this.espn = new ESPN();
-                
-        //this.dataManagement = dataManagement;
+        this.espn = new ESPN();          
     }
 
     /**
@@ -45,8 +42,6 @@ public class Controller {
         try {
             
             realGM.setJson(new JsonManagement());
-            
- 
             
             String RealGM_content = realGM.genererContenu(RealGM_id);
             String ESPN_content = espn.genererContenu(ESPN_id);
@@ -66,27 +61,10 @@ public class Controller {
                 view.update("names incompatibility");
             }
             
-        /*try {
-            JsonManagement Json = new JsonManagement();
-            dataManagement.setJson(Json);
-            
-            String RealGM_content = dataManagement.getRealGMContent(RealGM_id);
-            String ESPN_content = dataManagement.getESPNContent(ESPN_id);
-            String final_content;
-
-            if (header) { // true means that the header must be added 
-                String contenuEnTete = dataManagement.getHeader();
-                final_content = contenuEnTete + RealGM_content + ESPN_content;
-            } else {
-                final_content = RealGM_content + ESPN_content;
-            }
-
-            if (!namesAreCompatible()) { // display warning message if the two names are not identical
-                notifyObservateurs("names incompatibility");
+            if (espn.necessiteWarning()) {
+                view.update("warningESPN");
             }
             
-            dataManagement.setFinalContent(final_content);
-*/
         } catch (RealGMException e) {
             if (null == e.getMessage()) {
                 view.update("errorRealGM");
@@ -97,12 +75,20 @@ public class Controller {
                 case "never played in NBA":
                     view.update("errorNeverPlayedInNBARealGM");
                     break;
+                default:
+                    view.update("errorRealGM");
+                    break;
             }
         } catch (ESPNException e) {
-            if ("ID issue".equals(e.getMessage())) {
-                view.update("errorNoPlayerESPN");
-            } else {
+            if (null == e.getMessage()) {
                 view.update("errorESPN");
+            } else switch (e.getMessage()) {
+                case "ID issue":
+                    view.update("errorNoPlayerESPN");
+                    break;
+                default:
+                    view.update("errorESPN");
+                    break;
             }
         } catch (FileNotFoundException e) {
             if (null == e.getMessage()) {
@@ -153,6 +139,22 @@ public class Controller {
         return RealGM_name_formatted.equalsIgnoreCase(ESPN_name_formatted);
     }
 
+    /**
+     * Remove ESPN content and update date in the final content
+     */
+    public void removeESPNContent() {
+        
+        int truncateIndex = content.length();
+
+        for (int i = 0; i < 3; i++) {
+            truncateIndex = content.lastIndexOf('\n', truncateIndex - 1);
+        }
+
+        content = content.substring(0, truncateIndex);
+        
+        content = content.replaceAll("\\{\\{,\\}\\}<ref>.*<\\/ref>", "");
+    }
+    
     public String getRealGMPlayerName() {
         return realGM.getNomJoueur();
     }

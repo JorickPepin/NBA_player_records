@@ -111,7 +111,10 @@ public class Window extends JFrame {
                 stop = true;
                 break;
             case "names incompatibility":
-                displayWarningMessage();
+                displayIncompatibilityMessage();
+                break;
+            case "warningESPN":
+                displayESPNWarningMessage();
                 break;
             case "teams.jsonIssue":
                 label_alert.setText("Le fichier teams.json est introuvable.");
@@ -144,7 +147,7 @@ public class Window extends JFrame {
     /**
      * Display a warning message when the two recovered names are not identical
      */
-    private void displayWarningMessage() {
+    private void displayIncompatibilityMessage() {
         String message = "Il se peut que les identifiants n'appartiennent pas au même joueur.\n\n"
                 + "Joueur récupéré sur RealGM : "
                 + controller.getRealGMPlayerName()
@@ -155,6 +158,26 @@ public class Window extends JFrame {
         JOptionPane.showMessageDialog(this, message, "Erreur potentielle", JOptionPane.WARNING_MESSAGE);
     }
 
+    /**
+     * Display a warning message when the player played before the 1993-1994 season
+     * (ESPN does not display DD2 and TD3 until this season)
+     */
+    private void displayESPNWarningMessage() {
+        
+        String message = "ESPN comptabilise les double-doubles et les triple-doubles depuis la saison 1993-1994.\n"
+                + "Or, ce joueur a pris part à des matchs avant cette saison-là.\n\n"
+                + "<html>En cliquant sur <span style='color:green'>OK</span>, le contenu d'ESPN sera enlevé pour éviter de rentrer des informations erronées.</html>\n"
+                + "<html>Vous pouvez également le <span style='color:red'>conserver</span> (déconseillé).</html>";
+        
+        String[] options = {"Conserver", "OK"};
+        
+        int answer = JOptionPane.showOptionDialog(this, message, "Avertissement contenu ESPN", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+        
+        if (answer == 1) { // the user clicks on OK
+            controller.removeESPNContent();
+        }
+    }
+    
     private void setIcon() {
         BufferedImage image;
         
