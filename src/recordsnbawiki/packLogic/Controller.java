@@ -150,9 +150,9 @@ public class Controller {
             truncateIndex = content.lastIndexOf('\n', truncateIndex - 1);
         }
 
-        content = content.substring(0, truncateIndex);
+        content = content.substring(0, truncateIndex); // remove the 3 last lines
         
-        content = content.replaceAll("\\{\\{,\\}\\}<ref>.*<\\/ref>", "");
+        content = content.replaceAll("\\{\\{,\\}\\}<ref>.*<\\/ref>", ""); // remove the ESPN ref
     }
     
     public String getRealGMPlayerName() {

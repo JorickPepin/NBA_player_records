@@ -63,7 +63,7 @@ public class ESPN {
             
             // récupération du titre de la page
             titre = document.title();
-
+            
             // le nombre de double-double en saison régulière correspond au 36e élément <span class="fw-bold">
             DD2_SR = document.select("span.fw-bold").get(36).text();
             // le nombre de triple-double en saison régulière correspond au 37e élément <span class="fw-bold">
