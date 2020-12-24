@@ -173,7 +173,7 @@ public class Window extends JFrame {
         
         int answer = JOptionPane.showOptionDialog(this, message, "Avertissement contenu ESPN", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
         
-        if (answer == 1 || answer == -1) { // the user clicks on OK or close the window
+        if (answer == 1 || answer == -1) { // the user clicks on OK or closes the window
             controller.removeESPNContent();
         }
     }
