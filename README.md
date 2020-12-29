@@ -1,9 +1,31 @@
-# Wikipedia-help
 
 **README en cours de réécriture...**
 
 ---
-## Installation
+
+[![Github All Releases](https://img.shields.io/github/downloads/JorickPepin/Wikipedia-help/total.svg?style=for-the-badge)](https://github.com/JorickPepin/Wikipedia-help/releases/latest/download/RecordsJoueurNBA.jar)
+
+<details open="open">
+  <summary><h2 style="display: inline-block">Table des matières</h2></summary>
+  <ol>
+    <li>
+      <a href="#pour-commencer">Pour commencer</a>
+      <ul>
+        <li><a href="#pré-requis">Pré-requis</a></li>
+	    <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#présentation">Présentation</a></li>
+  </ol>
+</details>
+
+## Pour commencer
+
+### Pré-requis
+
+...
+
+### Installation
 
 Utilisez la commande ```ant``` ou ```ant -f build.xml``` depuis le dossier cloné pour compiler le programme.
 
