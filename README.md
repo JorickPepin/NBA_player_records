@@ -11,7 +11,7 @@
     <li>
       <a href="#pour-commencer">Pour commencer</a>
       <ul>
-        <li><a href="#pré-requis">Pré-requis</a></li>
+        <li><a href="#prérequis">Prérequis</a></li>
 	    <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
@@ -21,9 +21,10 @@
 
 ## Pour commencer
 
-### Pré-requis
+### Prérequis
 
-...
+* Java, version 8 ou plus
+* Ant (compilation)
 
 ### Installation
 
