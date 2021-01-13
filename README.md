@@ -12,10 +12,16 @@
       <a href="#pour-commencer">Pour commencer</a>
       <ul>
         <li><a href="#prérequis">Prérequis</a></li>
-	    <li><a href="#installation">Installation</a></li>
+	<li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#présentation">Présentation</a></li>
+    <li>
+      <a href="#présentation">Présentation</a>
+      <ul>
+        <li><a href="#besoin">Besoin</a></li>
+	<li><a href="#fonctionnement">Fonctionnement</a></li>
+      </ul>
+    </li>
   </ol>
 </details>
 
@@ -23,7 +29,7 @@
 
 ### Prérequis
 
-* Java, version 8 ou plus
+* Java, version 8 ou ultérieure
 * Ant (compilation)
 
 ### Installation
@@ -35,6 +41,17 @@ L'exécutable ```.jar``` est créé dans le dossier ```build/jar/```.
 Vous pouvez également utiliser la commande ```ant run``` pour créer et exécuter le ```.jar```.
 
 ## Présentation
+
+### Besoin
+
+Sur la [Wikipédia francophone](https://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Accueil_principal), les articles des joueurs NBA possèdent souvent une section *Records sur une rencontre* qui contient les meilleures performances du joueur sur un match ainsi que les nombres de [double-doubles](https://fr.wikipedia.org/wiki/Double-double) et [triple-doubles](https://fr.wikipedia.org/wiki/Triple-double) qu'il a réalisés en carrière.
+
+Je me suis rendu compte que ces sections étaient **rarement mises à jour**, régulièrement sourcées avec des **liens morts** voire **non sourcées** et avaient parfois une **mise en forme rebutante**. Cet outil permet donc de répondre à ces problèmatiques-là en peu de temps si on le compare au temps nécessaire pour le faire manuellement.
+
+Exemple de mise en forme minimaliste &#8595;\
+<img src="https://i.imgur.com/mWyvCxC.png" alt="Exemple de mauvaise mise en forme" width="500" />
+
+### Fonctionnement
 
 ...
 
