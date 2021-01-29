@@ -46,7 +46,7 @@ Vous pouvez également utiliser la commande ```ant run``` pour créer et exécut
 
 Sur la [Wikipédia francophone](https://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Accueil_principal), les articles des joueurs NBA possèdent souvent une section *Records sur une rencontre* qui contient les meilleures performances du joueur sur un match ainsi que les nombres de [double-doubles](https://fr.wikipedia.org/wiki/Double-double) et [triple-doubles](https://fr.wikipedia.org/wiki/Triple-double) qu'il a réalisés en carrière.
 
-Je me suis rendu compte que ces sections étaient **rarement mises à jour**, régulièrement sourcées avec des **liens morts** voire **non sourcées** et avaient parfois une **mise en forme rebutante**. Cet outil permet donc de répondre à ces problèmatiques-là en peu de temps si on le compare au temps nécessaire pour le faire manuellement.
+Je me suis rendu compte que ces sections étaient **rarement mises à jour**, régulièrement sourcées avec des **liens morts** voire **non sourcées** et avaient parfois une **mise en forme rebutante**. Cet outil permet donc de répondre à ces problèmatiques-là en peu de temps.
 
 Exemple de mise en forme minimaliste &#8595;\
 <img src="https://i.imgur.com/mWyvCxC.png" alt="Exemple de mauvaise mise en forme" width="500" />
