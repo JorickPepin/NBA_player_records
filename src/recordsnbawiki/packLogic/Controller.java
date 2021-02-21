@@ -3,9 +3,15 @@ package recordsnbawiki.packLogic;
 import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import recordsnbawiki.packLogic.wikidata.Wikidata;
+import recordsnbawiki.packLogic.wikidata.WikidataItem;
 import recordsnbawiki.packVue.Window;
 import recordsnbawiki.utils.ESPNException;
 import recordsnbawiki.utils.RealGMException;
+import recordsnbawiki.utils.WikidataException;
 
 /**
  *
@@ -17,15 +23,19 @@ public class Controller {
     
     private RealGM realGM;
     private ESPN espn;
+    private Wikidata wikidata;
     
     /*** Store the final content */
     private String content;
+    
+    private List<WikidataItem> players;
     
     public Controller() {
         this.view = new Window(this);
         
         this.realGM = new RealGM();
-        this.espn = new ESPN();          
+        this.espn = new ESPN();   
+        this.wikidata = new Wikidata();
     }
 
     /**
@@ -112,6 +122,15 @@ public class Controller {
         }
     }
 
+    public void retrievePlayers(String userInput) {
+        
+        try {
+            players = wikidata.generateContent(userInput);
+        } catch (WikidataException ex) {
+            view.update("wikidataIssue");
+        }
+    }
+    
     /**
      * Tests if the two recovered names are identical
      * @return true if the two names are identical, false otherwise
@@ -165,5 +184,9 @@ public class Controller {
     
     public String getContent() {
         return content;
+    }
+
+    public List<WikidataItem> getPlayers() {
+        return players;
     }
 }

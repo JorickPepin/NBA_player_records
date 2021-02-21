@@ -18,10 +18,12 @@ import recordsnbawiki.utils.WikidataException;
  */
 public class Wikidata {
     
-    public void generateContent(String userInput) throws WikidataException {
+    public List<WikidataItem> generateContent(String userInput) throws WikidataException {
         HttpURLConnection con = connection(userInput);
         List<WikidataItem> results = retrieveResults(con);
         List<WikidataItem> players = sortResults(results);
+        
+        return players;
     }
     
     /**
@@ -38,7 +40,7 @@ public class Wikidata {
                     + "&format=json"
                     + "&search=" + userInput.replace(" ", "%20")
                     + "&language=fr"
-                    + "&limit=50"
+                    + "&limit=20"
                     + "&uselang=fr";
             
             URL url = new URL(query);
@@ -48,7 +50,6 @@ public class Wikidata {
             return con;
             
         } catch (IOException e) {
-            System.err.println(e);
             throw new WikidataException();
         }
     }
@@ -80,7 +81,6 @@ public class Wikidata {
             return results;
             
         } catch (JsonSyntaxException | IOException e) {
-            System.err.println(e);
             throw new WikidataException();
         }
     }

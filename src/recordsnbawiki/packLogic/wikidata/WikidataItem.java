@@ -32,6 +32,6 @@ public class WikidataItem {
     
     @Override
     public String toString() {
-        return "WikidataPlayer{" + "id=" + id + ", label=" + label + ", description=" + description + '}';
+        return label + ", " + description;
     }
 }
