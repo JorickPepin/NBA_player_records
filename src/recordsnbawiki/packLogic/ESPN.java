@@ -31,7 +31,7 @@ public class ESPN {
      * @return le contenu mis en forme
      * @throws ESPNException 
      */
-    public String genererContenu(int id) throws ESPNException {
+    public String genererContenu(String id) throws ESPNException {
         this.url = "https://www.espn.com/nba/player/stats/_/id/" + id;
         this.warning = false;
         

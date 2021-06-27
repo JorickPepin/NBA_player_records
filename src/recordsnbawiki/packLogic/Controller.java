@@ -41,31 +41,32 @@ public class Controller {
     /**
      * Generates content from the player's RealGM and ESPN identifier
      *
-     * @param RealGM_id - the player's RealGM identifier
-     * @param ESPN_id - the player's ESPN identifier
-     * @param header_required - true if the header is needed, false otherwise
+     * @param player - the player chosen by the user
+     * @param headerRequired - true if the header is needed, false otherwise
      * @throws RealGMException
      * @throws ESPNException
      */
-    public void generateContent(int RealGM_id, int ESPN_id, boolean header_required) throws ESPNException, RealGMException {
+    public void generateContent(WikidataItem player, boolean headerRequired) throws ESPNException, RealGMException {
         
         try {
-            
             realGM.setJson(new JsonManagement());
             
-            String RealGM_content = realGM.genererContenu(RealGM_id);
-            String ESPN_content = espn.genererContenu(ESPN_id);
+            String realgmId = wikidata.retrieveRealGMId(player.getId());
+            String espnId = wikidata.retrieveESPNId(player.getId());
             
-            String final_content;
+            String realgmContent = realGM.genererContenu(realgmId);
+            String espnContent = espn.genererContenu(espnId);
             
-            if (header_required) {
+            String finalContent;
+            
+            if (headerRequired) {
                 Header header = new Header(realGM, espn);
-                final_content = header.getContenu() + RealGM_content + ESPN_content;
+                finalContent = header.getContenu() + realgmContent + espnContent;
             } else {
-                final_content = RealGM_content + ESPN_content;
+                finalContent = realgmContent + espnContent;
             }
             
-            this.content = final_content;
+            this.content = finalContent;
             
             if (!namesAreCompatible()) { // display warning message if the two names are not identical
                 view.update("names incompatibility");
@@ -119,13 +120,15 @@ public class Controller {
             }
         } catch (IOException e) {
             view.update("fileIssue");
+        } catch (WikidataException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public void retrievePlayers(String userInput) {
         
         try {
-            players = wikidata.generateContent(userInput);
+            players = wikidata.generatePlayers(userInput);
         } catch (WikidataException ex) {
             view.update("wikidataIssue");
         }
@@ -137,25 +140,25 @@ public class Controller {
      */
     private boolean namesAreCompatible() {
      
-        String RealGM_name = realGM.getNomJoueur();
-        String ESPN_name = espn.getNomJoueur();
+        String realgmName = realGM.getNomJoueur();
+        String espnName = espn.getNomJoueur();
         
-        String RealGM_name_formatted = "";
-        String ESPN_name_formatted = "";
+        String realgmNameFormatted = "";
+        String espnNameFormatted = "";
         
-        for (char c : RealGM_name.toCharArray()) {
+        for (char c : realgmName.toCharArray()) {
             if (Character.isLetter(c) || c == ' ') { // keep only letters and spaces to test without punctuation
-                RealGM_name_formatted += c;
+                realgmNameFormatted += c;
             }
         }
         
-        for (char c : ESPN_name.toCharArray()) {
+        for (char c : espnName.toCharArray()) {
             if (Character.isLetter(c) || c == ' ') {
-                ESPN_name_formatted += c;
+                espnNameFormatted += c;
             }
         }
           
-        return RealGM_name_formatted.equalsIgnoreCase(ESPN_name_formatted);
+        return realgmNameFormatted.equalsIgnoreCase(espnNameFormatted);
     }
 
     /**

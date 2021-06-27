@@ -35,7 +35,7 @@ public class RealGM {
     /** Permet d'utiliser les données récupérées dans les fichiers json */
     private JsonManagement json;
     
-    public String genererContenu(int id) throws RealGMException {
+    public String genererContenu(String id) throws RealGMException {
         this.url = "https://basketball.realgm.com/player/wd/Bests/" + id + "/NBA";
         this.aDesRecordsEnPlayoffs = false;
         
