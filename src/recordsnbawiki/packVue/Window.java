@@ -61,14 +61,13 @@ public class Window extends JFrame {
 
         switch (code) {
             case "loading":
-                label_alert.setText("Chargement ...");
-                label_alert.setForeground(Color.BLACK);
+                info("Chargement ...");
                 break;
             case "copy":
                 addContentToClipboard();
+
                 String text = "Contenu copié dans le presse-papier.";
-                label_alert.setText(text);
-                label_alert.setForeground(Color.BLACK);
+                info(text);
 
                 Timer t = new Timer(3000, (ActionEvent e) -> {
                     if (text.equals(label_alert.getText())) {
@@ -79,29 +78,19 @@ public class Window extends JFrame {
                 t.start();
                 break;
             case "errorRealGM":
-                label_alert.setText("Le contenu de RealGM n'a pas pu être récupéré.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le contenu de RealGM n'a pas pu être récupéré.");
                 break;
             case "errorESPN":
-                label_alert.setText("Le contenu d'ESPN n'a pas pu être récupéré.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le contenu d'ESPN n'a pas pu être récupéré.");
                 break;
             case "errorNoPlayerRealGM":
-                label_alert.setText("L'ID RealGM ne correspond à aucun joueur.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("L'ID RealGM ne correspond à aucun joueur.");
                 break;
             case "errorNoPlayerESPN":
-                label_alert.setText("L'ID ESPN ne correspond à aucun joueur.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("L'ID ESPN ne correspond à aucun joueur.");
                 break;
             case "errorNeverPlayedInNBARealGM":
-                label_alert.setText("Le joueur n'a jamais joué en NBA.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le joueur n'a jamais joué en NBA.");
                 break;
             case "names incompatibility":
                 displayIncompatibilityMessage();
@@ -110,37 +99,42 @@ public class Window extends JFrame {
                 displayESPNWarningMessage();
                 break;
             case "teams.jsonIssue":
-                label_alert.setText("Le fichier teams.json est introuvable.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le fichier teams.json est introuvable.");
                 break;
             case "stats.jsonIssue":
-                label_alert.setText("Le fichier stats.json est introuvable.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le fichier stats.json est introuvable.");
                 break;
             case "header_playoffs.txtIssue":
-                label_alert.setText("Le fichier header_playoffs.txt est introuvable.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le fichier header_playoffs.txt est introuvable.");
                 break;
             case "header_noplayoffs.txtIssue":
-                label_alert.setText("Le fichier header_noplayoffs.txt est introuvable.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Le fichier header_noplayoffs.txt est introuvable.");
                 break;
             case "fileIssue":
-                label_alert.setText("Une ressource n'a pas pu être récupérée.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Une ressource n'a pas pu être récupérée.");
                 break;
             case "wikidataIssue":
-                label_alert.setText("Un problème est survenu avec Wikidata.");
-                label_alert.setForeground(Color.RED);
-                stop = true;
+                error("Un problème est survenu avec Wikidata.");
+                break;
+            case "errorNoESPNId":
+                error("Ce joueur n'a pas d'identifiant ESPN sur Wikidata.");
+                break;
+            case "errorNoRealGMId":
+                error("Ce joueur n'a pas d'identifiant RealGM sur Wikidata.");
                 break;
         }
     };
+
+    private void info(String message) {
+        label_alert.setText(message);
+        label_alert.setForeground(Color.BLACK);
+    }
+
+    private void error(String message) {
+        label_alert.setText(message);
+        label_alert.setForeground(Color.RED);
+        stop = true;
+    }
 
     /**
      * Display a warning message when the two recovered names are not identical
@@ -311,6 +305,7 @@ public class Window extends JFrame {
 
     button_copy.setText("Copier");
 
+    checkBox_header.setSelected(true);
     checkBox_header.setText("En-tête");
     checkBox_header.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
@@ -328,10 +323,10 @@ public class Window extends JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(checkBox_header)
                     .addComponent(field_player_name)
-                    .addComponent(jScrollPane1)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
-                    .addComponent(label_alert, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-            .addContainerGap(50, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2)
+                    .addComponent(label_alert, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)))
+            .addGap(50, 50, 50))
     );
     layout.setVerticalGroup(
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -380,9 +375,10 @@ public class Window extends JFrame {
 
                 if (text.length() >= 3) { // the text field contains three or more caracters, we load the players
                     new Thread(() -> {
+                        list_players.setEnabled(false);
                         controller.retrievePlayers(text);
                         addPlayers(controller.getPlayers());
-                    
+                        list_players.setEnabled(true);
                     }).start();
                 } 
                 

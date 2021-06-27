@@ -155,8 +155,7 @@ public class Wikidata {
         } catch (IOException e) {
             throw new WikidataException();
         } catch (NullPointerException e) {
-            System.err.println("ce joueur n'a pas d'id espn");
-            throw new WikidataException();
+            throw new WikidataException("no RealGM ID");
         }
     }
     
@@ -197,8 +196,7 @@ public class Wikidata {
         } catch (IOException e) {
             throw new WikidataException();
         } catch (NullPointerException e) {
-            System.err.println("ce joueur n'a pas d'id espn");
-            throw new WikidataException();
+            throw new WikidataException("no ESPN ID");
         }
     }
     

@@ -120,8 +120,20 @@ public class Controller {
             }
         } catch (IOException e) {
             view.update("fileIssue");
-        } catch (WikidataException ex) {
-            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (WikidataException e) {
+            if (null == e.getMessage()) {
+                view.update("errorWikidata");
+            } else switch (e.getMessage()) {
+                case "no ESPN ID":
+                    view.update("errorNoESPNId");
+                    break;
+                case "no RealGM ID":
+                    view.update("errorNoRealGMId");
+                    break;
+                default:
+                    view.update("errorWikidata");
+                    break;
+            }
         }
     }
 
