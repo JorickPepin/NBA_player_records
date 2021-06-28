@@ -60,7 +60,7 @@ public class Controller {
             String finalContent;
             
             if (headerRequired) {
-                Header header = new Header(realGM, espn);
+                Header header = new Header(realGM, espn, player.getLabel());
                 finalContent = header.getContenu() + realgmContent + espnContent;
             } else {
                 finalContent = realgmContent + espnContent;
