@@ -17,6 +17,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -273,7 +274,6 @@ public class Window extends JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Records joueur NBA");
         setLocation(new java.awt.Point(500, 600));
-        setPreferredSize(new java.awt.Dimension(500, 600));
         setResizable(false);
         setSize(new java.awt.Dimension(500, 600));
 
@@ -308,6 +308,11 @@ public class Window extends JFrame {
     checkBox_header.setSelected(true);
     checkBox_header.setText("En-tête");
     checkBox_header.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+    checkBox_header.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkBox_headerActionPerformed(evt);
+        }
+    });
 
     label_alert.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     label_alert.setText(" ");
@@ -361,6 +366,21 @@ public class Window extends JFrame {
             field_player_name.setForeground(Color.BLACK);
         }
     }//GEN-LAST:event_field_player_nameFocusGained
+
+    private void checkBox_headerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkBox_headerActionPerformed
+        if (!textArea_content.getText().isEmpty()) {
+            JCheckBox cbLog = (JCheckBox) evt.getSource();
+            if (cbLog.isSelected()) {
+                controller.addHeader();
+            } else {
+                controller.removeHeader();
+            }
+
+            textArea_content.setText(controller.getContent());
+            textArea_content.setCaretPosition(0);
+            this.update("copy");
+        }
+    }//GEN-LAST:event_checkBox_headerActionPerformed
 
     private void addListeners() {
 
