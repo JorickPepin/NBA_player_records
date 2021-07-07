@@ -26,9 +26,7 @@ public class Controller {
     private Wikidata wikidata;
     private Header header;
 
-    /**
-     * * Store the final content
-     */
+    /** Store the final content */
     private String content;
 
     private List<WikidataItem> players;

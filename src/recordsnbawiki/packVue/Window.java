@@ -381,6 +381,8 @@ public class Window extends JFrame {
             this.update("copy");
         }
     }//GEN-LAST:event_checkBox_headerActionPerformed
+    
+    private Thread searchThread;
 
     private void addListeners() {
 
@@ -393,15 +395,24 @@ public class Window extends JFrame {
 
                 String text = field_player_name.getText();
 
-                if (text.length() >= 3) { // the text field contains three or more caracters, we load the players
-                    new Thread(() -> {
+                if (text.length() >= 3 && !text.equals("Recherchez un joueur")) { // the text field contains three or more caracters, we load the players
+
+                    if (searchThread != null) {
+                        searchThread.interrupt();
+                    }
+
+                    searchThread = new Thread(() -> {
                         list_players.setEnabled(false);
+
                         controller.retrievePlayers(text);
                         addPlayers(controller.getPlayers());
+
                         list_players.setEnabled(true);
-                    }).start();
-                } 
-                
+                    });
+
+                    searchThread.start();
+                }
+
                 if (text.length() == 0) { // clear the list
                     clearList();
                 }
