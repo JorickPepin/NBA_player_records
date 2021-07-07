@@ -251,10 +251,20 @@ public class Window extends JFrame {
     }
 
     /**
+     * Clear the clipboard
+     */
+    private void clearClipboard() {
+        StringSelection stringSelection = new StringSelection("");
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+    }
+
+    /**
      * Is launched when the user presses the button
      */
     private void submission(WikidataItem player) {
         clearTextArea();
+        clearClipboard();
 
         addContentToTextArea(player);
     }
