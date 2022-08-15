@@ -12,27 +12,28 @@ import java.nio.charset.StandardCharsets;
  */
 public class Header {
     
-    private String contenu;
+    private String header;
     
-    private RealGM realGM;
+    private final RealGM realGM;
+    private final ESPN espn;
     
-    private ESPN espn;
+    private final String playerName;
     
-    public Header(RealGM realGM, ESPN espn) throws FileNotFoundException, IOException {
+    public Header(RealGM realGM, ESPN espn, String playerName) throws FileNotFoundException, IOException {
         this.realGM = realGM;
         this.espn = espn;
-        
-        contenu = getHeader();
+        this.playerName = playerName;
+
+        generateHeader();
     }
     
     /**
      * Crée et retourne l'en-tête comprend le titre de section, le modèle,
      * l'introduction et les références
      *
-     * @return l'en-tête
      * @throws FileNotFoundException
      */
-    private String getHeader() throws FileNotFoundException, IOException {
+    private void generateHeader() throws FileNotFoundException, IOException {
         
         BufferedReader br;
         
@@ -71,15 +72,13 @@ public class Header {
         template = template.replace("URL_REALGM", realGM.getUrl());
         template = template.replace("URL_ESPN", espn.getUrl());
 
-        String nomDuJoueur = espn.getNomJoueur();
-
-        if (necessiteElision(nomDuJoueur.charAt(0))) { // si le nom commence par une voyelle ou un h
-            template = template.replace("PLAYER_NAME", "d'" + nomDuJoueur);
+        if (necessiteElision(this.playerName.charAt(0))) { // si le nom commence par une voyelle ou un h
+            template = template.replace("PLAYER_NAME", "d'" + this.playerName);
         } else {
-            template = template.replace("PLAYER_NAME", "de " + nomDuJoueur);
+            template = template.replace("PLAYER_NAME", "de " + this.playerName);
         }
 
-        return template;
+        this.header = template;
     }
     
     /**
@@ -94,6 +93,6 @@ public class Header {
     
    
     public String getContenu() {
-        return contenu;
+        return this.header;
     }
 }
