@@ -2,6 +2,7 @@ package recordsnbawiki.packLogic.wikidata;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import java.io.BufferedReader;
@@ -12,7 +13,10 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import recordsnbawiki.utils.WikidataException;
 
 /**
@@ -123,63 +127,28 @@ public class Wikidata {
         return players;
     }
 
-    public String retrieveRealGMId(String playerId) throws WikidataException {
-
+    /**
+     * Charge l'élément Wikidata du joueur à partir de son identifiant unique afin
+     * de récupérer les claims RealGM et ESPN ainsi que le nom du joueur sur la
+     * Wikipédia FR.
+     *
+     * @param playerId
+     * @return
+     * @throws WikidataException
+     */
+    public Map<String, String> retrieveEntity(String playerId) throws WikidataException {
         String REALGM_PROPERTY = "P3957";
-
-        try {
-            // connection
-            String query = "https://www.wikidata.org/w/api.php"
-                    + "?action=wbgetclaims"
-                    + "&format=json"
-                    + "&entity=" + playerId
-                    + "&property=" + REALGM_PROPERTY;
-
-            URL url = new URL(query);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-            // response
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-            StringBuilder response = new StringBuilder();
-            String currentLine;
-            while ((currentLine = in.readLine()) != null) {
-                response.append(currentLine);
-            }
-            in.close();
-
-            // content parsing
-            JsonElement root = JsonParser.parseString(response.toString());
-            String realgmId = root.getAsJsonObject().getAsJsonObject("claims")
-                    .getAsJsonArray(REALGM_PROPERTY).get(0).getAsJsonObject()
-                    .getAsJsonObject("mainsnak").getAsJsonObject("datavalue")
-                    .getAsJsonPrimitive("value").getAsString();
-
-            return realgmId;
-
-        } catch (IOException e) {
-            throw new WikidataException();
-        } catch (NullPointerException e) {
-            throw new WikidataException("no RealGM ID");
-        }
-    }
-
-    public String retrieveESPNId(String playerId) throws WikidataException {
-
         String ESPN_PROPERTY = "P3685";
 
         try {
-            // connection
             String query = "https://www.wikidata.org/w/api.php"
-                    + "?action=wbgetclaims"
+                    + "?action=wbgetentities"
                     + "&format=json"
-                    + "&entity=" + playerId
-                    + "&property=" + ESPN_PROPERTY;
+                    + "&ids=" + playerId;
 
             URL url = new URL(query);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-            // response
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
             StringBuilder response = new StringBuilder();
@@ -189,19 +158,40 @@ public class Wikidata {
             }
             in.close();
 
-            // content parsing
             JsonElement root = JsonParser.parseString(response.toString());
-            String espnId = root.getAsJsonObject().getAsJsonObject("claims")
-                    .getAsJsonArray(ESPN_PROPERTY).get(0).getAsJsonObject()
+            JsonObject entity = root.getAsJsonObject().get("entities").getAsJsonObject().get(playerId)
+                    .getAsJsonObject();
+
+            JsonObject claims = entity.get("claims").getAsJsonObject();
+
+            if (!claims.has(REALGM_PROPERTY)) {
+                throw new WikidataException("no RealGM ID");
+            }
+
+            if (!claims.has(ESPN_PROPERTY)) {
+                throw new WikidataException("no ESPN ID");
+            }
+
+            String realgmId = claims.get(REALGM_PROPERTY).getAsJsonArray().get(0).getAsJsonObject()
                     .getAsJsonObject("mainsnak").getAsJsonObject("datavalue")
                     .getAsJsonPrimitive("value").getAsString();
 
-            return espnId;
+            String espnId = claims.get(ESPN_PROPERTY).getAsJsonArray().get(0).getAsJsonObject()
+                    .getAsJsonObject("mainsnak").getAsJsonObject("datavalue")
+                    .getAsJsonPrimitive("value").getAsString();
+
+            String name = entity.getAsJsonObject("sitelinks").getAsJsonObject("frwiki").get("title").getAsString();
+
+            Map<String, String> data = new HashMap<String, String>();
+
+            data.put("realgmId", realgmId);
+            data.put("espnId", espnId);
+            data.put("name", name);
+
+            return data;
 
         } catch (IOException e) {
             throw new WikidataException();
-        } catch (NullPointerException e) {
-            throw new WikidataException("no ESPN ID");
         }
     }
 }

@@ -4,8 +4,7 @@ import recordsnbawiki.packLogic.json.JsonManagement;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
 import recordsnbawiki.packLogic.wikidata.Wikidata;
 import recordsnbawiki.packLogic.wikidata.WikidataItem;
 import recordsnbawiki.packVue.Window;
@@ -52,13 +51,12 @@ public class Controller {
         try {
             realGM.setJson(new JsonManagement());
 
-            String realgmId = wikidata.retrieveRealGMId(player.getId());
-            String espnId = wikidata.retrieveESPNId(player.getId());
+            Map<String, String> entity = wikidata.retrieveEntity(player.getId());
 
-            String realgmContent = realGM.genererContenu(realgmId);
-            String espnContent = espn.genererContenu(espnId);
+            String realgmContent = realGM.genererContenu(entity.get("realgmId"));
+            String espnContent = espn.genererContenu(entity.get("espnId"));
 
-            header = new Header(realGM, espn, player.getLabel());
+            header = new Header(realGM, espn, entity.get("name"));
 
             String finalContent;
 
