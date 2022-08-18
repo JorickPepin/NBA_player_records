@@ -186,7 +186,7 @@ public class Wikidata {
 
             data.put("realgmId", realgmId);
             data.put("espnId", espnId);
-            data.put("name", name);
+            data.put("name", name.split(" \\(")[0]); // Franz Wagner (basket-ball) -> Franz Wagner
 
             return data;
 

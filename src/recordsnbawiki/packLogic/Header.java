@@ -11,14 +11,14 @@ import java.nio.charset.StandardCharsets;
  * @author Jorick
  */
 public class Header {
-    
+
     private String header;
-    
+
     private final RealGM realGM;
     private final ESPN espn;
-    
+
     private final String playerName;
-    
+
     public Header(RealGM realGM, ESPN espn, String playerName) throws FileNotFoundException, IOException {
         this.realGM = realGM;
         this.espn = espn;
@@ -26,7 +26,7 @@ public class Header {
 
         generateHeader();
     }
-    
+
     /**
      * Crée et retourne l'en-tête comprend le titre de section, le modèle,
      * l'introduction et les références
@@ -34,18 +34,23 @@ public class Header {
      * @throws FileNotFoundException
      */
     private void generateHeader() throws FileNotFoundException, IOException {
-        
+
         BufferedReader br;
-        
-        if (realGM.getADesRecordsEnPlayoffs()) { // le header n'est pas le même si le joueur a des records en playoffs ou non
-            try { 
-                br = new BufferedReader (new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("data/header_playoffs.txt"), StandardCharsets.UTF_8));
+
+        if (realGM.getADesRecordsEnPlayoffs()) { // le header n'est pas le même si le joueur a des records en playoffs
+                                                 // ou non
+            try {
+                br = new BufferedReader(new InputStreamReader(
+                        this.getClass().getClassLoader().getResourceAsStream("data/header_playoffs.txt"),
+                        StandardCharsets.UTF_8));
             } catch (NullPointerException e) {
                 throw new FileNotFoundException("header_playoffs.txt");
             }
         } else {
             try {
-                br = new BufferedReader (new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("data/header_noplayoffs.txt"), StandardCharsets.UTF_8));
+                br = new BufferedReader(new InputStreamReader(
+                        this.getClass().getClassLoader().getResourceAsStream("data/header_noplayoffs.txt"),
+                        StandardCharsets.UTF_8));
             } catch (NullPointerException e) {
                 throw new FileNotFoundException("header_noplayoffs.txt");
             }
@@ -59,7 +64,7 @@ public class Header {
             sb.append(System.lineSeparator());
             line = br.readLine();
         }
-        
+
         String template = sb.toString();
 
         br.close();
@@ -80,7 +85,7 @@ public class Header {
 
         this.header = template;
     }
-    
+
     /**
      * Permet de savoir si une élision est nécessaire devant un nom
      *
@@ -90,8 +95,7 @@ public class Header {
     private boolean necessiteElision(char c) {
         return "AEIOUaeiouHh".indexOf(c) != -1;
     }
-    
-   
+
     public String getContenu() {
         return this.header;
     }
